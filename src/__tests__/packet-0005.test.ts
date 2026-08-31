@@ -199,13 +199,12 @@ describe("localStorage 리포지토리 storage.ts", () => {
   // AC-5: QuotaExceededError + 손상된 JSON
   describe("AC-5: QuotaExceededError 처리 및 손상된 JSON 복구", () => {
     it("should handle QuotaExceededError by returning error message without throwing", () => {
-      const originalSetItem = localStorage.setItem;
       const mockSetItem = vi.fn(() => {
         const error = new Error("QuotaExceededError");
         error.name = "QuotaExceededError";
         throw error;
       });
-      localStorage.setItem = mockSetItem;
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(mockSetItem);
 
       const result = saveEntry({
         platformId: "p1",
@@ -220,7 +219,7 @@ describe("localStorage 리포지토리 storage.ts", () => {
         "저장 공간이 부족해요. 오래된 기록을 삭제해주세요"
       );
 
-      localStorage.setItem = originalSetItem;
+      vi.restoreAllMocks();
     });
 
     it("should detect corrupted JSON in localStorage and return empty array with corrupted:true", () => {
