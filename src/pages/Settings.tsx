@@ -70,7 +70,7 @@ export default function Settings() {
   }
 
   return (
-    <ScreenScaffold top={<Top title={<Top.TitleParagraph>설정</Top.TitleParagraph>} />} bottom={<FloatingTabBar items={[{ label: "홈", path: "/" }, { label: "설정", path: "/settings" }]} />}>
+    <ScreenScaffold top={<Top title={<Top.TitleParagraph>앱 설정</Top.TitleParagraph>} />} bottom={<FloatingTabBar />}>
       <Spacing size={16} />
       <Paragraph.Text typography="t5">월 목표</Paragraph.Text>
       <Spacing size={8} />

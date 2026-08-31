@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Asset, Button, Chip, ListRow, Paragraph, Spacing, Tab, Top } from "@toss/tds-mobile";
+import { Button, Chip, ListRow, Paragraph, Spacing, Tab, Top } from "@toss/tds-mobile";
 import { generateHapticFeedback } from "@apps-in-toss/web-framework";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { FloatingTabBar } from "@/components/FloatingTabBar";
@@ -83,14 +83,7 @@ export default function Wage() {
     <ScreenScaffold
       top={<Top title={<Top.TitleParagraph>실질 시급</Top.TitleParagraph>} />}
       bottom={
-        <FloatingTabBar
-          items={[
-            { label: "홈", path: "/" },
-            { label: "시급", path: "/wage" },
-            { label: "리포트", path: "/report" },
-            { label: "설정", path: "/settings" },
-          ]}
-        />
+        <FloatingTabBar />
       }
     >
       <Tab onChange={(index) => selectPeriod(PERIOD_TABS[index].key)}>
@@ -106,7 +99,6 @@ export default function Wage() {
       {rows.length === 0 ? (
         <EmptyState
           testId="wage-empty"
-          icon={<Asset.ContentIcon name="iconInboxRegular" alt="빈 상태" />}
           title="아직 계산할 기록이 없어요"
           description="수입을 기록하면 시급을 계산해드려요"
           action={

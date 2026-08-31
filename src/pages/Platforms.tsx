@@ -13,7 +13,6 @@ import {
 } from "@toss/tds-mobile";
 import { generateHapticFeedback } from "@apps-in-toss/web-framework";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
-import { FloatingTabBar } from "@/components/FloatingTabBar";
 import { ColorDot } from "@/components/ColorDot";
 import { EmptyState } from "@/components/EmptyState";
 import { getPlatforms, savePlatforms } from "@/lib/storage";
@@ -86,7 +85,7 @@ function SelectChip({
         borderRadius: 22,
         border: selected ? "1px solid var(--adaptiveGrey900)" : "1px solid var(--adaptiveGrey200)",
         backgroundColor: selected ? "var(--adaptiveGrey900)" : "var(--adaptiveBackground)",
-        color: selected ? "var(--adaptiveWhite)" : "var(--adaptiveGrey900)",
+        color: selected ? "var(--adaptiveBackground)" : "var(--adaptiveGrey900)",
       }}
     >
       {leading}
@@ -172,12 +171,7 @@ export default function Platforms() {
   }
 
   return (
-    <ScreenScaffold
-      top={<Top title={<Top.TitleParagraph>플랫폼 관리</Top.TitleParagraph>} />}
-      bottom={
-        <FloatingTabBar items={[{ label: "홈", path: "/" }, { label: "설정", path: "/settings" }]} />
-      }
-    >
+    <ScreenScaffold top={<Top title={<Top.TitleParagraph>플랫폼 관리</Top.TitleParagraph>} />}>
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <Button variant="weak" size="small" onClick={openAdd}>
           플랫폼 추가

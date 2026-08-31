@@ -2,6 +2,35 @@ import type { ReactNode } from "react";
 import { Paragraph, Spacing, Skeleton } from "@toss/tds-mobile";
 
 /**
+ * 빈 상태 글리프 — 인라인 SVG.
+ *
+ * ⚠️ `Asset.ContentIcon name="..."`을 쓰지 마라. TDS는 이름을
+ * `https://static.toss.im/icons/svg/icn-<name>.svg`로 fetch하고, 이름이 틀리면 403 →
+ * `throw new Error("Wrong URL")` → 에러 바운더리가 화면을 통째로 날린다(콘솔 에러도 남는다).
+ * 실측(2026-08-31): `iconInboxRegular`가 그렇게 /wage·/report를 흰 화면으로 만들었다.
+ * 이름 카탈로그가 .ai-factory에 없어 검증이 불가능하므로, 빈 상태는 이 로컬 글리프를 쓴다.
+ */
+export function EmptyGlyph({ label = "빈 상태" }: { label?: string }) {
+  return (
+    <svg
+      width={48}
+      height={48}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="var(--adaptiveGrey400)"
+      strokeWidth={1.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="img"
+      aria-label={label}
+    >
+      <path d="M3 8.5 5.5 4h13L21 8.5V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5Z" />
+      <path d="M3 8.5h5l1 3h6l1-3h5" />
+    </svg>
+  );
+}
+
+/**
  * 빈 상태 — 아이콘(선택) + 제목 + 설명 + 보조(weak) CTA.
  *
  * Pre-built (재구현 금지): 목록/결과가 비었을 때 맨텍스트("데이터 없음") 대신 사용.
@@ -9,13 +38,13 @@ import { Paragraph, Spacing, Skeleton } from "@toss/tds-mobile";
  *   FixedBottomCTA)와 같은 라벨·액션을 중복 노출하지 마라(비활성 버튼 중복 = 군더더기).
  */
 export function EmptyState({
-  icon,
+  icon = <EmptyGlyph />,
   title,
   description,
   action,
   testId,
 }: {
-  /** Asset.ContentIcon 등(선택) */
+  /** 아이콘(선택). 기본값은 로컬 EmptyGlyph — 원격 아이콘 이름은 쓰지 마라(위 주석 참조). */
   icon?: ReactNode;
   title: ReactNode;
   description?: ReactNode;

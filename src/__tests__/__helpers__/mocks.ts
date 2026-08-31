@@ -128,14 +128,12 @@ export function mockTds() {
         ),
     ),
 
+    // title은 그대로 렌더한다 — 여기서 <h1>로 한 번 더 감싸면 Top.TitleParagraph의 <h1>과
+    // 겹쳐 <h1><h1>이 되고, React가 validateDOMNesting 경고를 console.error로 뱉는다.
+    // (콘솔 에러 0건을 요구하는 전 화면 순회 테스트가 목 때문에 깨졌었다.)
     Top: Object.assign(
       ({ children, title }: any) =>
-        React.createElement(
-          "nav",
-          { role: "navigation" },
-          title && React.createElement("h1", null, title),
-          children,
-        ),
+        React.createElement("nav", { role: "navigation" }, title, children),
       {
         TitleParagraph: ({ children }: any) => React.createElement("h1", null, children),
       },
