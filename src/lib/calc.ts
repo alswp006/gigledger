@@ -199,7 +199,7 @@ export function calcMonthlyReport(
 export function sumAmountByDate(entries: Entry[], dateStr: string): number {
   let total = 0;
   for (const e of entries) {
-    if (e.date === dateStr) total += e.amountKrw;
+    if (e.earnedAt === dateStr) total += e.amountKrw;
   }
   return total;
 }
@@ -208,7 +208,7 @@ export function sumAmountByDate(entries: Entry[], dateStr: string): number {
 export function sumAmountByMonth(entries: Entry[], monthStr: string): number {
   let total = 0;
   for (const e of entries) {
-    if (e.date.startsWith(monthStr)) total += e.amountKrw;
+    if (e.earnedAt.startsWith(monthStr)) total += e.amountKrw;
   }
   return total;
 }
@@ -221,7 +221,7 @@ export function calculateHourlyRate(amount: number, hours: number): number {
 
 /** 오늘부터 거슬러 끊기지 않은 연속 기록일 수 (기준일: 로컬 오늘). */
 export function getDayStreak(entries: Entry[]): number {
-  const dateSet = new Set(entries.map((e) => e.date));
+  const dateSet = new Set(entries.map((e) => e.earnedAt));
   const today = toDateKey(new Date());
   if (!dateSet.has(today)) return 0;
 

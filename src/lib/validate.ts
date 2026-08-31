@@ -79,13 +79,10 @@ export function isValidEntry(data: Partial<Entry>): { valid: boolean; errors?: s
   } else if (data.amountKrw > MAX_AMOUNT) {
     errors.push("금액은 1,000만원까지 입력할 수 있어요");
   }
-  if (!data.date || data.date.trim() === "") {
+  if (!data.earnedAt || data.earnedAt.trim() === "") {
     errors.push("날짜를 입력해주세요");
-  } else if (data.date > toDateKey(new Date())) {
+  } else if (data.earnedAt > toDateKey(new Date())) {
     errors.push("미래 날짜는 기록할 수 없어요");
-  }
-  if (data.hoursWorked !== undefined && (data.hoursWorked < 0 || data.hoursWorked > 24)) {
-    errors.push("근무 시간은 24시간을 넘을 수 없어요");
   }
   return errors.length > 0 ? { valid: false, errors } : { valid: true };
 }
@@ -100,9 +97,6 @@ export function isValidPlatform(data: Partial<Platform>): { valid: boolean; erro
   }
   if (!data.color || data.color.trim() === "") {
     errors.push("색상을 선택해주세요");
-  }
-  if (data.hourlyRate !== undefined && data.hourlyRate < 0) {
-    errors.push("시급은 0원 이상이어야 해요");
   }
   return errors.length > 0 ? { valid: false, errors } : { valid: true };
 }
