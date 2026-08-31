@@ -57,7 +57,7 @@ describe("레이아웃/상태 공용 컴포넌트 (SubmitFooter / EmptyState / S
           description: "첫 소득을 기록해 보세요",
           action: React.createElement(
             "button",
-            { variant: "weak", display: "block", onClick: vi.fn() },
+            { variant: "weak", display: "block", onClick: vi.fn() } as any,
             "기록 시작하기",
           ),
         }),
