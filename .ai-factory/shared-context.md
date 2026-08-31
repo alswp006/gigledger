@@ -216,9 +216,12 @@ export const RouteState = {} as const;
     validate.ts
   main.tsx
   pages/
+    Entry.tsx
     Home.tsx
     Platforms.tsx
+    Report.tsx
     Settings.tsx
+    Share.tsx
     Wage.tsx
     __TdsGallery.tsx
   styles/
@@ -255,13 +258,11 @@ export const RouteState = {} as const;
 - ScreenScaffold.tsx: ScreenScaffold
 - SkeletonBlock.tsx: SkeletonBlock
 - Sparkline.tsx: Sparkline
-- StateView.tsx: EmptyState, LoadingState
+- StateView.tsx: EmptyGlyph, EmptyState, LoadingState
 - SubmitFooter.tsx: SubmitFooter
 - SummaryHero.tsx: SummaryHero
 - TossPurchase.tsx: TossPurchase
-- TossRewardAd.tsx: TossRewardAd
-
-### Module Dependenci...
+...
 CRITICAL: Before creating any new function, type, or component, check the list above. If something similar exists, import and use it.
 
 ## Already Implemented (do NOT duplicate or overwrite)
@@ -277,87 +278,4 @@ CRITICAL: Before creating any new function, type, or component, check the list a
 - 0017: /report 본문 지표 컴포넌트 + 공유 이동 (files: src/components/ReportBody.tsx)
 - 0010: /settings 설정 화면 (files: src/pages/Settings.tsx)
 - 0015: /wage 실질 시급 화면 (files: src/pages/Wage.tsx)
-
-## Available exports from existing files
-// src/components/AdSlot.tsx
-export function AdSlot({ adGroupId, className, variant, theme }: AdSlotProps) {
-
-// src/components/Amount.tsx
-export function Amount({
-
-// src/components/BottomCTA.tsx
-export function SubmitFooter({
-export function ButtonStack({
-
-// src/components/Card.tsx
-export function Card({
-
-// src/components/ColorDot.tsx
-export function ColorDot({ colorToken }: { colorToken: ColorToken }) {
-
-// src/components/CountUp.tsx
-export function CountUp({
-
-// src/components/EmptyState.tsx
-export function EmptyState({
-
-// src/components/MiniBar.tsx
-export interface MiniBarItem {
-export function MiniBar({ items }: { items: MiniBarItem[] }) {
-
-// src/components/PageShell.tsx
-export function PageShell({ children, style }: { children: ReactNode; style?: CSSProperties }) {
-
-// src/components/RecentEntryList.tsx
-export function RecentEntryList({ entries, platforms }: RecentEntryListProps) {
-
-// src/components/ReportBody.tsx
-export function ReportBody({ entries, platforms, month }: ReportBodyProps) {
-
-// src/components/ScreenScaffold.tsx
-export function ScreenScaffold({
-
-// src/components/SkeletonBlock.tsx
-export function SkeletonBlock({
-
-// src/components/Sparkline.tsx
-export function Sparkline({ points, testId }: { points: number[]; testId?: string }) {
-
-// src/components/StateView.tsx
-export function EmptyState({
-export function LoadingState({
-
-// src/components/SubmitFooter.tsx
-export function SubmitFooter({
-
-// src/components/SummaryHero.tsx
-export function SummaryHero({
-
-// src/components/TossPurchase.tsx
-export interface TossPurchaseResult {
-export function TossPurchase({
-
-// src/components/TossRewardAd.tsx
-export function TossRewardAd({
-
-// src/hooks/useLedger.ts
-export interface UseLedgerSaveEntryInput {
-export function useLedger() {
-
-// src/lib/calc.ts
-export function calcHourlyWage(
-export function calcStreak(
-export function calcPeriodSummary(
-export function calcGoalRate(current: number, monthlyGoal: number): number | null {
-export function calcPlatfor
-
-## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
-
-Available topics: deploy(1), general(9), testing(1)
-
-Key lessons (verify against actual code before applying):
-- [general] 외부에서 들어온 모든 값(라우터 state, 로컬 저장소, 부분 입력 폼)은 사용 직전에 배열·객체 기본값으로 정규화하고, 테이블/맵 조회 결과는 존재 확인 후에만 하위 속성이나 length에 접근하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 의존 그래프 최하층의 타입·계약 파일은 런타임 코드 0줄의 순수 선언으로 가장 먼저 단독 타입체크를 통과시키고, 파일 생성은 셸 명령이 아닌 허용된 편집 도구로만 하게 강제하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 영속 저장소에서 읽은 값은 항상 스키마 기본값으로 정규화해 배열·객체 타입을 보장한 뒤 반환하고, 화면은 빈/손상/부분 데이터에서도 렌더되도록 방어하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 정책·기능 제거형 리팩터링은 화면과 도메인 로직 레이어에서만 수행하고, package.json의 플랫폼 필수 의존성(디자인 시스템·플랫폼 SDK·프레임워크 코어)은 어떤 경우에도 삭제하지 말 것 — 필수 패키지 화이트리스트를 빌드 전 가드로 검증하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 공용 기반 모듈(상수·저장소·계산 유틸)이 실제로 머지되기 전에는 이를 import하는 화면·훅 패킷을 머지하지 말고, 모든 머지 게이트에 타입체크와 프로덕션 빌드 통과(미해결 import 0건)를 필수로 걸어라. (60% · 타 앱 1회 — 맹신 금지)
+- 0019: 라우팅 배선 + FloatingTabBar + 전역 Provider (files: src/App.tsx, src/components/FloatingTabBar.tsx)
