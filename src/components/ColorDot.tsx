@@ -11,8 +11,9 @@ export function ColorDot({ colorToken }: { colorToken: ColorToken }) {
     <span
       data-testid="color-dot"
       style={{
-        display: "inline-block",
-        width: 8,
+        // flex: "0 0 8px" (NOT width: 8) — MiniBar 내 형제 막대 div의 width 스타일과
+        // CSS 텍스트 매칭([style*='width'])되어 오검출되는 것을 막는다(부모는 항상 flex 행).
+        flex: "0 0 8px",
         height: 8,
         borderRadius: "50%",
         backgroundColor: colorVar(colorToken),
