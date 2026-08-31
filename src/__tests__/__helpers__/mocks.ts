@@ -152,10 +152,10 @@ export function mockTds() {
       { Header: ({ children }: any) => React.createElement("div", null, children) },
     ),
 
-    Chip: ({ children, selected, onClick }: any) =>
+    Chip: ({ children, selected, variant, onClick }: any) =>
       React.createElement(
         "button",
-        { role: "button", "aria-pressed": selected, onClick },
+        { role: "button", "aria-pressed": selected, "data-variant": variant, onClick },
         children,
       ),
 
