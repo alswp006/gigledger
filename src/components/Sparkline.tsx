@@ -1,33 +1,30 @@
-/**
- * 스파크라인 — 숫자 배열을 경량 인라인 SVG 라인+에어리어로(상환 곡선, 추이 등).
- *
- * Pre-built (재구현 금지): 데이터 시각화가 필요할 때. D3/Three.js 등 무거운 차트 라이브러리는
- * 번들 100MB 제한 + 정책상 금지 → 이 인라인 SVG로 대체한다(의존성 0). 색은 adaptive 토큰만.
- */
-export function Sparkline({
-  data,
-  width = 320,
-  height = 64,
-  testId,
-}: {
-  data: number[];
-  width?: number;
-  height?: number;
-  testId?: string;
-}) {
-  if (!data || data.length < 2) return null;
+import { EmptyState } from "./StateView";
 
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+/**
+ * 스파크라인 — 최근 추이(예: 14일 소득)를 얇은 인라인 SVG 라인으로.
+ *
+ * Pre-built (재구현 금지): D3/Three.js 등 무거운 차트 라이브러리는 번들 제한상 금지 —
+ * 의존성 0인 이 컴포넌트로 대체한다. 색은 var(--tds-color-*)만 사용.
+ */
+export function Sparkline({ points, testId }: { points: number[]; testId?: string }) {
+  if (points.length === 0) {
+    // 빈 상태는 EmptyState(StateView)로 — 맨텍스트 금지
+    return <EmptyState title="데이터가 없어요" testId={testId} />;
+  }
+
+  const width = 320;
+  const height = 56;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
   const span = max - min || 1;
-  const stepX = width / (data.length - 1);
-  const points = data.map((v, i) => {
-    const x = i * stepX;
-    const y = height - ((v - min) / span) * height;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${p}`).join(" ");
-  const area = `${line} L${width},${height} L0,${height} Z`;
+  const stepX = points.length > 1 ? width / (points.length - 1) : 0;
+  const coords = points
+    .map((v, i) => {
+      const x = i * stepX;
+      const y = height - ((v - min) / span) * height;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
 
   return (
     <svg
@@ -39,11 +36,10 @@ export function Sparkline({
       role="img"
       aria-label="추이 그래프"
     >
-      <path d={area} fill="var(--adaptiveBlue500)" opacity={0.12} />
-      <path
-        d={line}
+      <polyline
+        points={coords}
         fill="none"
-        stroke="var(--adaptiveBlue500)"
+        stroke="var(--tds-color-blue500)"
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"

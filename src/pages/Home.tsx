@@ -1,4 +1,4 @@
-import { Top, Paragraph, Spacing, ListRow, Button } from '@toss/tds-mobile';
+import { Top, Spacing, ListRow, Button } from '@toss/tds-mobile';
 import { useNavigate } from 'react-router-dom';
 import { ScreenScaffold } from '../components/ScreenScaffold';
 import { SummaryHero } from '../components/SummaryHero';
@@ -39,21 +39,16 @@ export default function Home() {
     <ScreenScaffold
       top={<Top title={<Top.TitleParagraph>GigLedger</Top.TitleParagraph>} />}
     >
-      {/* 시각 앵커: 헤드라인 + 카드 내 진입 버튼(부유 금지, display="block" 전체폭).
-          데이터 앱이면 value를 <Amount typography="t1" />(핵심 숫자)로 교체하라. */}
-      <SummaryHero
-        label="GigLedger"
-        value={<Paragraph.Text typography="t2">배달·대리운전·쿠팡플렉스 등 여러 플랫폼 수입을 매일 기록해 한 곳에서 합산 관리</Paragraph.Text>}
-        caption="로그인 없이 바로 쓸 수 있어요"
-        action={
-          // 라벨은 앱의 핵심 행동 동사로 교체하라 — "연봉 계산하기"/"기록 남기기" 등.
-          // generic "시작하기"/"확인"은 카피 규칙 위반. onClick도 실제 첫 화면 경로로.
-          <Button variant="fill" display="block" onClick={() => navigate('/')}>
-            첫 결과 보기
-          </Button>
-        }
-        testId="home-hero"
-      />
+      {/* 시각 앵커: 헤드라인(값에 핵심 숫자를 크게 박아라). 카드 아래 별도 진입 버튼 배치. */}
+      <SummaryHero label="GigLedger" value="0원" caption="로그인 없이 바로 쓸 수 있어요" />
+
+      <Spacing size={16} />
+
+      {/* 라벨은 앱의 핵심 행동 동사로 교체하라 — "연봉 계산하기"/"기록 남기기" 등.
+          generic "시작하기"/"확인"은 카피 규칙 위반. onClick도 실제 첫 화면 경로로. */}
+      <Button variant="fill" display="block" onClick={() => navigate('/')}>
+        첫 결과 보기
+      </Button>
 
       <Spacing size={24} />
 
