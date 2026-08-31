@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Paragraph, Spacing, TextField, Top } from "@toss/tds-mobile";
+import { AlertDialog, Button, Paragraph, Spacing, TextField, Top } from "@toss/tds-mobile";
+import { generateHapticFeedback } from "@apps-in-toss/web-framework";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { SubmitFooter } from "@/components/BottomCTA";
 import { EmptyState, LoadingState } from "@/components/StateView";
@@ -10,6 +11,14 @@ import { validateEntry } from "@/lib/validate";
 import { toDateKey } from "@/lib/date";
 import { parseKrwAmount } from "@/lib/format";
 import { MAX_MEMO } from "@/lib/constants";
+
+function fireHaptic(type: "success" | "tickWeak") {
+  try {
+    Promise.resolve(generateHapticFeedback({ type })).catch(() => {});
+  } catch {
+    /* WebView 밖(브라우저/검수자 PC/jsdom)에서는 throw — 무시 */
+  }
+}
 
 /** location.state는 신뢰할 수 없다(직접 URL 진입·새로고침 시 null) — 읽는 즉시 정규화한다. */
 function readState(state: unknown): { date?: string; entryId?: string } {
@@ -89,13 +98,19 @@ function toNumber(raw: string): number {
 export default function Entry() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { platforms, entries, loading, saveEntry } = useLedger();
+  const { platforms, entries, loading, saveEntry, removeEntry } = useLedger();
 
   const incoming = readState(location.state);
   const editing = incoming.entryId ? entries.find((e) => e.id === incoming.entryId) : undefined;
   const isEditMode = Boolean(incoming.entryId);
 
   const activePlatforms = useMemo(() => platforms.filter((p) => !p.archived), [platforms]);
+  // 수정 중인 기록이 보관 플랫폼을 참조하면, 선택지에서 사라지면 안 되니 예외로 덧붙인다.
+  const chipPlatforms = useMemo(() => {
+    if (!editing) return activePlatforms;
+    const archivedRef = platforms.find((p) => p.id === editing.platformId && p.archived);
+    return archivedRef ? [...activePlatforms, archivedRef] : activePlatforms;
+  }, [activePlatforms, platforms, editing]);
 
   const [draft, setDraft] = useState<{
     platformId: string;
@@ -106,6 +121,7 @@ export default function Entry() {
     memo: string;
   } | null>(null);
   const [error, setError] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // 로드가 끝난 뒤 한 번만 폼을 채운다. 수정 모드면 기존 기록, 아니면 진입 날짜 + 첫 플랫폼.
   if (!loading && draft === null) {
@@ -122,6 +138,13 @@ export default function Entry() {
   const header = (
     <Top
       title={<Top.TitleParagraph>{isEditMode ? "기록 수정" : "수입 기록"}</Top.TitleParagraph>}
+      right={
+        isEditMode && editing ? (
+          <Button variant="weak" size="small" color="danger" onClick={() => setDeleteOpen(true)}>
+            삭제
+          </Button>
+        ) : undefined
+      }
     />
   );
 
@@ -195,6 +218,14 @@ export default function Entry() {
       setError(result.error);
       return;
     }
+    fireHaptic("success");
+    navigate("/", { replace: true });
+  };
+
+  const handleDelete = () => {
+    if (!editing) return;
+    removeEntry(editing.id);
+    setDeleteOpen(false);
     navigate("/", { replace: true });
   };
 
@@ -240,7 +271,7 @@ export default function Entry() {
             scrollbarWidth: "none",
           }}
         >
-          {activePlatforms.map((p) => (
+          {chipPlatforms.map((p) => (
             <SelectChip
               key={p.id}
               label={p.name}
@@ -329,6 +360,18 @@ export default function Entry() {
           style={{ height: "calc(96px + var(--toss-safe-area-bottom, env(safe-area-inset-bottom, 0px)))" }}
         />
       </form>
+
+      {isEditMode && editing ? (
+        <AlertDialog
+          open={deleteOpen}
+          onClose={() => setDeleteOpen(false)}
+          title="기록을 삭제할까요?"
+          description="삭제하면 되돌릴 수 없어요"
+          alertButton={
+            <AlertDialog.AlertButton onClick={handleDelete}>삭제</AlertDialog.AlertButton>
+          }
+        />
+      ) : null}
     </ScreenScaffold>
   );
 }
