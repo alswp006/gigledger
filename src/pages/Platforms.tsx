@@ -172,7 +172,10 @@ export default function Platforms() {
 
   return (
     <ScreenScaffold top={<Top title={<Top.TitleParagraph>플랫폼 관리</Top.TitleParagraph>} />}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
+          {platforms.length} / {MAX_PLATFORMS}개 등록됨
+        </Paragraph.Text>
         <Button variant="weak" size="small" onClick={openAdd}>
           플랫폼 추가
         </Button>

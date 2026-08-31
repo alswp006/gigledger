@@ -280,6 +280,7 @@ CRITICAL: Before creating any new function, type, or component, check the list a
 - 0010: /settings 설정 화면 (files: src/pages/Settings.tsx)
 - 0015: /wage 실질 시급 화면 (files: src/pages/Wage.tsx)
 - 0019: 라우팅 배선 + FloatingTabBar + 전역 Provider (files: src/App.tsx, src/components/FloatingTabBar.tsx)
+- 0009: 레이아웃/상태 공용 컴포넌트 (SubmitFooter / EmptyState / SkeletonBlock) (files: src/components/SubmitFooter.tsx, src/components/EmptyState.tsx, src/components/SkeletonBlock.tsx)
 
 ## Available exports from existing files
 // src/App.tsx
@@ -307,6 +308,9 @@ export function ColorDot({ colorToken }: { colorToken: ColorToken }) {
 // src/components/CountUp.tsx
 export function CountUp({
 
+// src/components/EmptyState.tsx
+export function EmptyState({
+
 // src/components/FloatingTabBar.tsx
 export type TabItem = {
 export const MAIN_TABS: TabItem[] = [
@@ -328,6 +332,9 @@ export function ReportBody({ entries, platforms, month }: ReportBodyProps) {
 // src/components/ScreenScaffold.tsx
 export function ScreenScaffold({
 
+// src/components/SkeletonBlock.tsx
+export function SkeletonBlock({
+
 // src/components/Sparkline.tsx
 export function Sparkline({ points, testId }: { points: number[]; testId?: string }) {
 
@@ -336,19 +343,15 @@ export function EmptyGlyph({ label = "빈 상태" }: { label?: string }) {
 export function EmptyState({
 export function LoadingState({
 
+// src/components/SubmitFooter.tsx
+export function SubmitFooter({
+
 // src/components/SummaryHero.tsx
 export function SummaryHero({
 
 // src/components/TossPurchase.tsx
 export interface TossPurchaseResult {
-export function TossPurchase({
-
-// src/components/TossRewardAd.tsx
-export function TossRewardAd({
-
-// src/hooks/useAppToast.ts
-export const TOAST_SAVE_FAILURE = "저장 공간이 부족해요. 오래된 기록을 삭제해주세요";
-export const TOAST_CORRUPT
+export function Tos
 
 ## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
 
