@@ -5,59 +5,62 @@
  * 타입을 그대로 가정해도 된다. 추측이 어긋나 병합에서 무너지는 것을 막기 위한 파일이다.
  */
 
+/** 핵심 도메인 데이터 구조, 모든 페이지가 의존 (구현: 패킷 0001) */
+export type Ledger = { id: string; entries: Entry[]; platforms: Platform[]; created: string; updated: string };
+
 /** 수입 기록 엔티티 (구현: 패킷 0001) */
-export type Entry = { id: string; platformId: string; amountKrw: number; date: string; hoursWorked?: number; memo?: string; createdAt: string };
+export type Entry = { id: string; platformId: string; amountKrw: number; earnedAt: string; memo?: string };
 
 /** 플랫폼 정의 (구현: 패킷 0001) */
-export type Platform = { id: string; name: string; color: string; isActive: boolean; hourlyRate?: number; createdAt: string };
+export type Platform = { id: string; name: string; color: string; active: boolean; createdAt: string };
 
-/** 앱 설정 (구현: 패킷 0001) */
-export type Settings = { theme: "light" | "dark"; dailyGoalKrw: number; currencyDisplay: "KRW" | "USD"; adConsent: boolean; version: number };
+/** 라우팅 상태, 0019가 사용 (구현: 패킷 0001) */
+export type RouteState = { tab: 'home' | 'platforms' | 'entry' | 'wage' | 'report' | 'share'; params?: Record<string, string> };
 
-/** 라우팅 상태 (구현: 패킷 0001) */
-export type RouteState = { route: "home" | "entry" | "platforms" | "wage" | "report" | "settings" | "share"; entryId?: string; month?: string };
-
-/** 전체 장부 상태 (구현: 패킷 0001) */
-export type LedgerState = { entries: Entry[]; platforms: Platform[]; settings: Settings; isLoading: boolean };
+/** 검증 에러 타입 (구현: 패킷 0001) */
+export type ValidationError = { field: string; message: string };
 
 /** localStorage 키 상수 (구현: 패킷 0002) */
-export type STORAGE_KEYS = { entries: "app:entries"; platforms: "app:platforms"; settings: "app:settings" };
+export type STORAGE_KEYS = { readonly ledger: string; readonly onboardingDone: string; readonly adConsent: string };
 
-/** 색상 토큰 (구현: 패킷 0002) */
-export type COLOR_TOKENS = { primary: string; success: string; warning: string; danger: string; neutral: string };
+/** 시각화 색상 토큰, 0008에서 사용 (구현: 패킷 0002) */
+export type COLOR_PALETTE = { success: string; warning: string; danger: string; info: string };
 
-/** 앱 한계값 (구현: 패킷 0002) */
-export type LIMITS = { maxMemoLength: 200; maxPlatforms: 20; adReportGap: 3 };
+/** 입력 한계값, 0004/0012에서 사용 (구현: 패킷 0002) */
+export type LIMITS = { maxEntryMemo: number; maxPlatformName: number; maxMonthlyDisplay: number };
 
-/** 금액 포맷팅 (KRW, USD, compact 옵션) (구현: 패킷 0003) */
-export type formatAmountFn = (amount: number, opts?: { currency?: string; compact?: boolean }) => string;
+/** 금액 포맷, 모든 시각화 컴포넌트에서 사용 (구현: 패킷 0003) */
+export type formatAmountFn = (amount: number, opts?: { currency?: string; decimals?: number }) => string;
 
-/** 날짜 포맷팅 (구현: 패킷 0003) */
-export type formatDateFn = (date: string, fmt?: "short" | "long" | "time") => string;
+/** 날짜 포맷, 0013/0017에서 사용 (구현: 패킷 0003) */
+export type formatDateFn = (date: string | Date, format?: 'short' | 'long') => string;
 
-/** KRW 금액 파싱 (숫자로 변환) (구현: 패킷 0003) */
-export type parseKrwAmountFn = (input: string) => number | null;
+/** 날짜 파싱, 0012에서 사용 (구현: 패킷 0003) */
+export type parseDateFn = (dateStr: string) => Date | null;
 
-/** 고유 ID 생성 (구현: 패킷 0003) */
+/** UUID 생성, 0012에서 엔티티 생성 (구현: 패킷 0003) */
 export type generateIdFn = () => string;
 
-/** Entry 엔티티 검증 (구현: 패킷 0004) */
-export type isValidEntryFn = (data: Partial<Entry>) => { valid: boolean; errors?: string[] };
+/** 금액 검증, 0012에서 사용 (구현: 패킷 0004) */
+export type validateAmountFn = (amount: number) => ValidationError | null;
 
-/** Platform 엔티티 검증 (구현: 패킷 0004) */
-export type isValidPlatformFn = (data: Partial<Platform>) => { valid: boolean; errors?: string[] };
+/** 플랫폼명 검증, 0011에서 사용 (구현: 패킷 0004) */
+export type validatePlatformNameFn = (name: string) => ValidationError | null;
 
-/** 날짜별 금액 합계 (구현: 패킷 0006) */
-export type sumAmountByDateFn = (entries: Entry[], dateStr: string) => number;
+/** localStorage에 저장, 0007이 호출 (구현: 패킷 0005) */
+export type saveLedgerFn = (ledger: Ledger) => Promise<void>;
 
-/** 월별 금액 합계 (구현: 패킷 0006) */
-export type sumAmountByMonthFn = (entries: Entry[], monthStr: string) => number;
+/** localStorage에서 로드, 0007이 호출 (구현: 패킷 0005) */
+export type loadLedgerFn = () => Promise<Ledger | null>;
 
-/** 시급 계산 (구현: 패킷 0006) */
-export type calculateHourlyRateFn = (amount: number, hours: number) => number;
+/** 연속 입력일 계산, 0013에서 사용 (구현: 패킷 0006) */
+export type calculateStreakFn = (entries: Entry[]) => number;
 
-/** 연속 기록일 계산 (구현: 패킷 0006) */
-export type getDayStreakFn = (entries: Entry[]) => number;
+/** 월 합계 계산, 0015/0017에서 사용 (구현: 패킷 0006) */
+export type calculateMonthlyTotalFn = (entries: Entry[], year: number, month: number) => number;
 
-/** 장부 상태 관리 훅 (공개 API) (구현: 패킷 0007) */
-export type useLedgerFn = () => { state: LedgerState; add: (entry: Entry) => void; update: (id: string, entry: Partial<Entry>) => void; delete: (id: string) => void; setPlatforms: (platforms: Platform[]) => void; getEntries: (opts?: { platformId?: string; startDate?: string; endDate?: string }) => Entry[] };
+/** 상태 관리 훅, 모든 페이지에서 의존 (구현: 패킷 0007) */
+export type useLedgerFn = () => { ledger: Ledger | null; addEntry: (entry: Entry) => Promise<void>; updatePlatform: (platform: Platform) => Promise<void>; isLoading: boolean; error: string | null };
+
+/** 토스트 알림 훅, 0012/0011에서 사용 (구현: 패킷 0020) */
+export type useAppToastFn = () => { toast: (message: string, type?: 'success' | 'error' | 'info') => void };
