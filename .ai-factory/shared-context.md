@@ -187,12 +187,15 @@ export const RouteState = {} as const;
     Card.tsx
     ColorDot.tsx
     CountUp.tsx
+    EmptyState.tsx
     FloatingTabBar.tsx
     MiniBar.tsx
     PageShell.tsx
     ScreenScaffold.tsx
+    SkeletonBlock.tsx
     Sparkline.tsx
     StateView.tsx
+    SubmitFooter.tsx
     SummaryHero.tsx
     TossPurchase.tsx
     TossRewardAd.tsx
@@ -238,12 +241,15 @@ export const RouteState = {} as const;
 - Card.tsx: Card
 - ColorDot.tsx: ColorDot
 - CountUp.tsx: CountUp
+- EmptyState.tsx: EmptyState
 - FloatingTabBar.tsx: FloatingTabBar
 - MiniBar.tsx: MiniBar
 - PageShell.tsx: PageShell
 - ScreenScaffold.tsx: ScreenScaffold
+- SkeletonBlock.tsx: SkeletonBlock
 - Sparkline.tsx: Sparkline
 - StateView.tsx: EmptyState, LoadingState
+- SubmitFooter.tsx: SubmitFooter
 - SummaryHero.tsx: SummaryHero
 - TossPurchase.tsx: TossPurchase
 - TossRewardAd.tsx: TossRewardAd
@@ -251,8 +257,7 @@ export const RouteState = {} as const;
 ### Module Dependencies (import graph)
   lib/calc.ts → imports: lib/types, lib/contract, lib/date
   lib/constants.ts → imports: lib/types
-  lib/storage.ts → imports: lib/types, lib/constants, lib/id
-  lib/validate.ts → imports: lib/date, lib/contract
+  lib/storage.ts → imports: lib/types, lib...
 CRITICAL: Before creating any new function, type, or component, check the list above. If something similar exists, import and use it.
 
 ## Already Implemented (do NOT duplicate or overwrite)
