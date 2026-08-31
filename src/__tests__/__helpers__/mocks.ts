@@ -303,6 +303,10 @@ export function mockTossRewardAd() {
 
 // ── react-router-dom ──
 // Preserve actual router + override useNavigate for assertion.
+// useLocation is intentionally left as `actual` (NOT stubbed to the static `mockLocation`
+// below) — pages that read location.state (e.g. RouteState-driven screens) rely on
+// MemoryRouter's real per-test `initialEntries` state via renderWithRouter. A static
+// stub here would silently discard that state on every render.
 export function mockRouter() {
   vi.mock("react-router-dom", async () => {
     const actual = await vi.importActual<typeof import("react-router-dom")>(
@@ -311,7 +315,6 @@ export function mockRouter() {
     return {
       ...actual,
       useNavigate: () => mockNavigate,
-      useLocation: () => mockLocation,
     };
   });
 }
