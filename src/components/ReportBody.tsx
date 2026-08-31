@@ -30,17 +30,17 @@ function prevMonthOf(month: string): string {
   return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, "0")}`;
 }
 
-// ListRow의 contents는 레이아웃 슬롯 prop이라(children 아님) 실제 콘텐츠는 children으로 직접 넣는다.
+// ⚠️ TDS ListRow는 children을 렌더하지 않는다 — 지표는 contents/right 슬롯에 넣는다.
 function MetricRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <ListRow>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+    <ListRow
+      contents={
         <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
           {label}
         </Paragraph.Text>
-        {children}
-      </div>
-    </ListRow>
+      }
+      right={children}
+    />
   );
 }
 
@@ -112,16 +112,18 @@ export function ReportBody({ entries, platforms, month }: ReportBodyProps) {
       {report.bestDay ? (
         <>
           <Spacing size={16} />
-          <ListRow>
-            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+          <ListRow
+            contents={
               <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
                 최다 수입일
               </Paragraph.Text>
+            }
+            right={
               <Paragraph.Text typography="t6">
                 {`${formatDate(report.bestDay.date)} · ${formatKRW(report.bestDay.amount)}`}
               </Paragraph.Text>
-            </div>
-          </ListRow>
+            }
+          />
         </>
       ) : null}
       <Spacing size={24} />

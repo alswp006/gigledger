@@ -23,7 +23,40 @@ const ROUTES: { path: string; name: string }[] = [
 /** 데이터가 필요한 화면용 localStorage 시드(앱에 맞게 채워라). 앱 스크립트보다 먼저 실행된다. */
 async function seed(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    // window.localStorage.setItem("MY_STORAGE_KEY", JSON.stringify({ /* ... */ }));
+    // 실제 사용자 상태를 재현해야 지표·리스트·비중 막대가 실제로 그려진 화면을 찍는다.
+    // (빈 상태만 찍히면 '휑함'/겹침 같은 데이터 화면의 깨짐을 스모크가 못 본다.)
+    const today = new Date();
+    const dayKey = (offset: number) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - offset);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const nowIso = today.toISOString();
+
+    const platforms = [
+      { id: "pf-1", name: "배민커넥트", category: "delivery", colorToken: "blue", archived: false, createdAt: nowIso },
+      { id: "pf-2", name: "쿠팡플렉스", category: "logistics", colorToken: "green", archived: false, createdAt: nowIso },
+      { id: "pf-3", name: "카카오대리", category: "driving", colorToken: "orange", archived: false, createdAt: nowIso },
+    ];
+
+    const entries = [0, 1, 2, 3, 5, 8].map((offset, idx) => ({
+      id: `en-${idx}`,
+      platformId: platforms[idx % platforms.length].id,
+      date: dayKey(offset),
+      amount: 74000 + idx * 9000,
+      expense: 6000 + idx * 500,
+      minutes: 240 + idx * 15,
+      memo: idx % 2 === 0 ? "저녁 피크" : "",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    }));
+
+    window.localStorage.setItem("gigledger.platforms.v1", JSON.stringify(platforms));
+    window.localStorage.setItem("gigledger.entries.v1", JSON.stringify(entries));
+    window.localStorage.setItem(
+      "gigledger.settings.v1",
+      JSON.stringify({ monthlyGoal: 3000000, bestStreak: 4, noticeSeenAt: nowIso }),
+    );
   });
 }
 

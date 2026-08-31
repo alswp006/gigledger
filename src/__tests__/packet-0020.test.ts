@@ -175,7 +175,7 @@ describe("광고 배치 훅 + 검수 정적 게이트 & UX 폴리시", () => {
       expect(offenders).toEqual([]);
     });
 
-    it("AC-4: '설치'/'다운로드'/'앱스토어' 앱 설치 유도 문구가 0건이다", () => {
+    it("AC-4: '설치'/'다운로드'/'앱스토어' 등 설치 유도 문구가 0건이다", () => {
       const files = collectFiles();
       const offenders: string[] = [];
       for (const file of files) {

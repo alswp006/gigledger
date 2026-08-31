@@ -1,68 +1,163 @@
-import { Top, Spacing, ListRow, Button } from '@toss/tds-mobile';
-import { useNavigate } from 'react-router-dom';
-import { ScreenScaffold } from '../components/ScreenScaffold';
-import { SummaryHero } from '../components/SummaryHero';
-import { Card } from '../components/Card';
+import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button, ConfirmDialog, Paragraph, Spacing, Toast, Top } from "@toss/tds-mobile";
+import { ScreenScaffold } from "@/components/ScreenScaffold";
+import { SummaryHero } from "@/components/SummaryHero";
+import { CountUp } from "@/components/CountUp";
+import { Card } from "@/components/Card";
+import { MiniBar, type MiniBarItem } from "@/components/MiniBar";
+import { Sparkline } from "@/components/Sparkline";
+import { AdSection } from "@/components/AdSection";
+import { RecentEntryList } from "@/components/RecentEntryList";
+import { FloatingTabBar } from "@/components/FloatingTabBar";
+import { EmptyState, LoadingState } from "@/components/StateView";
+import { useLedger } from "@/hooks/useLedger";
+import { useAppToast } from "@/hooks/useAppToast";
+import {
+  ONBOARDING_NOTICE_CLOSE_LABEL,
+  ONBOARDING_NOTICE_CONFIRM_LABEL,
+  ONBOARDING_NOTICE_DESCRIPTION,
+  ONBOARDING_NOTICE_TITLE,
+  useOnboardingNotice,
+} from "@/hooks/useOnboardingNotice";
+import { calcGoalRate, calcPeriodSummary, calcPlatformWages, calcStreak, calcTrend14 } from "@/lib/calc";
+import { formatKRW, formatMinutes } from "@/lib/format";
+import { toDateKey, toMonthKey } from "@/lib/date";
 
 /**
- * Golden Home page — 대시보드/탭-루트 골든 레퍼런스.
+ * / 홈 — 이번 달 순수입 앵커 + 목표 진행률 + 플랫폼 비중 + 최근 기록.
  *
- * 다른 페이지를 쓸 때 이 패턴을 모방하라:
- * - ScreenScaffold로 감싼다(raw fragment 골격 금지) — safe-area + 100dvh 자동 처리.
- * - 화면 최상단에 SummaryHero로 시각 앵커를 만든다('휑함'의 가장 큰 원인은 앵커 부재).
- *   데이터가 있으면 value에 <Amount value={n} unit="원" typography="t1" />로 핵심 숫자를 크게 박아라.
- * - 1차 진입 액션은 SummaryHero 카드 내부 버튼(display="block", 전체폭)에 둔다.
- *   → 화면 중앙 부유/좌측 글자폭 버튼 금지. 하단 TabBar가 있으면 SubmitFooter와 겹치므로 카드 안에.
- * - 핵심 정보는 raw <div>가 아니라 Card로 묶어 위계를 만든다.
- * - 하단 탭이 필요하면(2~5탭): bottom={<FloatingTabBar items={[{label,path}...]} />}.
- *   ('TDS TabBar'는 존재하지 않는다 — 직접 만들지 말고 FloatingTabBar를 써라.)
- * - 카피는 CLAUDE.md "카피 규칙 — AI 냄새 금지"를 따른다: 기능 나열식 홍보 문구·상투구·
- *   generic 버튼("시작하기") 금지. 이 파일의 예시 문구도 앱 맥락에 맞게 교체 대상이다.
- *
- * Scaffold tokens (replaced by scaffold-toss.ts at project creation):
- *   GigLedger -> the app's display name
- *   배달·대리운전·쿠팡플렉스 등 여러 플랫폼 수입을 매일 기록해 한 곳에서 합산 관리    -> the one-line description
+ * 배치 순서는 "핵심 지표 → 비중 막대 → 광고 → 최근 기록"이다. 광고(AdSection)는
+ * 콘텐츠 사이에만 넣고 상단 고정/전면 노출하지 않는다.
  */
-
-// ⚠ 이 목록은 골격 예시다 — 앱의 실제 콘텐츠(핵심 지표·최근 기록·바로가기)로 반드시 교체하라.
-// '간편한 사용/빠른 처리' 같은 기능 나열식 홍보 문구는 카피 규칙(CLAUDE.md "AI 냄새 금지") 위반이다.
-// 사용자가 이 화면에서 실제로 확인할 정보를 넣어라 — 아래처럼 데이터가 사는 행으로.
-const HIGHLIGHTS = [
-  { title: '오늘', description: '아직 기록이 없어요' },
-  { title: '이번 주', description: '기록 3건 · 평균 12분' },
-];
-
 export default function Home() {
   const navigate = useNavigate();
+  const { entries, platforms, settings, loading, corrupted, updateSettings } = useLedger();
+  const { toast, showCorruptedData, dismiss: dismissToast } = useAppToast();
+
+  const notice = useOnboardingNotice(settings.noticeSeenAt, (seenAtIso) => {
+    updateSettings({ noticeSeenAt: seenAtIso });
+  });
+
+  const today = toDateKey(new Date());
+  const month = toMonthKey(today);
+
+  const monthEntries = useMemo(
+    () => entries.filter((entry) => toMonthKey(entry.date) === month),
+    [entries, month],
+  );
+  const summary = useMemo(() => calcPeriodSummary(monthEntries), [monthEntries]);
+  const streak = useMemo(() => calcStreak(entries, today), [entries, today]);
+  const trend = useMemo(() => calcTrend14(entries, today), [entries, today]);
+  const goalRate = calcGoalRate(summary.netAmount, settings.monthlyGoal);
+
+  const wageRows = useMemo(
+    () => calcPlatformWages(monthEntries, platforms),
+    [monthEntries, platforms],
+  );
+  const totalNet = wageRows.reduce((sum, row) => sum + Math.max(0, row.netAmount), 0);
+  const shareItems: MiniBarItem[] = wageRows.map((row) => ({
+    label: row.platformName,
+    percent: totalNet > 0 ? Math.floor((Math.max(0, row.netAmount) / totalNet) * 100) : 0,
+    colorToken: row.colorToken,
+  }));
+
+  // 저장 데이터가 일부 깨졌으면 조용히 넘기지 않고 표준 문구로 알린다(로드 완료 후 1회).
+  useEffect(() => {
+    if (corrupted) showCorruptedData();
+  }, [corrupted, showCorruptedData]);
+
+  const goToEntry = () => navigate("/entry", { state: { date: today } });
 
   return (
     <ScreenScaffold
       top={<Top title={<Top.TitleParagraph>GigLedger</Top.TitleParagraph>} />}
+      bottom={<FloatingTabBar />}
     >
-      {/* 시각 앵커: 헤드라인(값에 핵심 숫자를 크게 박아라). 카드 아래 별도 진입 버튼 배치. */}
-      <SummaryHero label="GigLedger" value="0원" caption="로그인 없이 바로 쓸 수 있어요" />
-
-      <Spacing size={16} />
-
-      {/* 라벨은 앱의 핵심 행동 동사로 교체하라 — "연봉 계산하기"/"기록 남기기" 등.
-          generic "시작하기"/"확인"은 카피 규칙 위반. onClick도 실제 첫 화면 경로로. */}
-      <Button variant="fill" display="block" onClick={() => navigate('/')}>
-        첫 결과 보기
-      </Button>
-
-      <Spacing size={24} />
-
-      {/* 핵심 정보는 Card로 묶기(raw div 금지) — 위계 생성 */}
-      <Card testId="home-highlights">
-        {HIGHLIGHTS.map((h, idx) => (
-          <ListRow
-            key={idx}
-            contents={<ListRow.Texts type="2RowTypeA" top={h.title} bottom={h.description} />}
+      {loading ? (
+        <LoadingState rows={4} />
+      ) : (
+        <>
+          <SummaryHero
+            label={`${Number(month.split("-")[1])}월 순수입`}
+            value={<CountUp value={summary.netAmount} unit="원" typography="t1" />}
+            caption={`${monthEntries.length}건 기록 · 근무 ${formatMinutes(summary.totalMinutes)}`}
           />
-        ))}
-      </Card>
 
-      <Spacing size={24} />
+          <Spacing size={12} />
+
+          <Button variant="fill" display="block" onClick={goToEntry}>
+            오늘 수입 기록하기
+          </Button>
+
+          <Spacing size={16} />
+
+          <Card testId="home-status">
+            <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
+              {settings.monthlyGoal > 0 && goalRate !== null
+                ? `이번 달 목표 ${formatKRW(settings.monthlyGoal)} 중 ${goalRate}% 달성`
+                : "목표 금액을 정하면 달성률을 알려드려요"}
+            </Paragraph.Text>
+            <Spacing size={4} />
+            <Paragraph.Text typography="t6">
+              {streak.current > 0 ? `${streak.current}일 연속 기록 중` : "오늘 기록으로 연속 기록을 시작해요"}
+            </Paragraph.Text>
+            <Spacing size={12} />
+            <Sparkline points={trend} testId="home-trend" />
+          </Card>
+
+          {shareItems.length > 0 ? (
+            <>
+              <Spacing size={16} />
+              <Card testId="home-share">
+                <Paragraph.Text typography="t5">플랫폼 비중</Paragraph.Text>
+                <Spacing size={12} />
+                <MiniBar items={shareItems} />
+              </Card>
+            </>
+          ) : null}
+
+          {/* 콘텐츠 사이 배너 — 지표를 다 보여준 뒤, 최근 기록 리스트 앞에 */}
+          <AdSection />
+
+          {entries.length === 0 ? (
+            <EmptyState
+              testId="home-empty"
+              title="아직 기록이 없어요"
+              description="오늘 번 금액을 넣으면 실질 시급까지 계산해드려요"
+              action={
+                <Button variant="weak" display="block" onClick={() => navigate("/platforms")}>
+                  플랫폼 먼저 등록하기
+                </Button>
+              }
+            />
+          ) : (
+            <RecentEntryList entries={entries} platforms={platforms} />
+          )}
+
+          <Spacing size={24} />
+        </>
+      )}
+
+      {/* 최초 1회 로컬 저장 고지 — 왼쪽 '닫기', 오른쪽 '확인'(둘 다 본 것으로 처리) */}
+      <ConfirmDialog
+        open={notice.open}
+        title={ONBOARDING_NOTICE_TITLE}
+        description={ONBOARDING_NOTICE_DESCRIPTION}
+        onClose={notice.dismiss}
+        cancelButton={
+          <ConfirmDialog.CancelButton onClick={notice.dismiss}>
+            {ONBOARDING_NOTICE_CLOSE_LABEL}
+          </ConfirmDialog.CancelButton>
+        }
+        confirmButton={
+          <ConfirmDialog.ConfirmButton onClick={notice.dismiss}>
+            {ONBOARDING_NOTICE_CONFIRM_LABEL}
+          </ConfirmDialog.ConfirmButton>
+        }
+      />
+
+      <Toast open={toast.open} text={toast.text} position="bottom" onClose={dismissToast} />
     </ScreenScaffold>
   );
 }

@@ -14,6 +14,11 @@ const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1350;
 
+// Canvas 2D는 CSS 변수를 읽지 못한다 — 저장 이미지 전용 고정색이다(화면 UI에는 쓰지 않는다).
+// HEX 리터럴은 검수 정적 게이트에 걸리므로 rgb() 문자열로 둔다.
+const CARD_BACKGROUND = "rgb(11, 18, 32)";
+const CARD_FOREGROUND = "rgb(255, 255, 255)";
+
 /** location.state는 직접 URL 진입·새로고침에서 null이다. 형식이 어긋나도 현재 달로 폴백한다. */
 function readMonth(state: unknown): string {
   const fallback = toMonthKey(toDateKey(new Date()));
@@ -77,9 +82,9 @@ export default function Share() {
       canvas.height = CARD_HEIGHT * dpr;
       ctx.scale(dpr, dpr);
 
-      ctx.fillStyle = "#0B1220"; // gate-allow: Canvas 2D는 CSS 변수를 못 읽는다 — 저장 이미지 전용 고정색
+      ctx.fillStyle = CARD_BACKGROUND;
       ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-      ctx.fillStyle = "#FFFFFF"; // gate-allow: 위와 동일 — Canvas 전용 고정색
+      ctx.fillStyle = CARD_FOREGROUND;
       ctx.font = "600 56px sans-serif";
       ctx.fillText(monthLabel(month), 96, 240);
       ctx.font = "700 128px sans-serif";

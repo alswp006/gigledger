@@ -101,31 +101,25 @@ export default function Settings() {
 
       <Spacing size={24} />
       <Paragraph.Text typography="t5">기록</Paragraph.Text>
-      {/* ListRow의 contents/left/right는 레이아웃 슬롯 prop이라(children 아님) 실제 콘텐츠는
-          children으로 직접 넣는다 — RecentEntryList.tsx와 동일 컨벤션. */}
-      <ListRow>
-        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-          <Paragraph.Text typography="t6">현재 스트릭</Paragraph.Text>
-          <Paragraph.Text typography="t6">{`${currentStreak}일`}</Paragraph.Text>
-        </div>
-      </ListRow>
-      <ListRow>
-        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-          <Paragraph.Text typography="t6">최고 스트릭</Paragraph.Text>
-          <Paragraph.Text typography="t6">{`${settings.bestStreak}일`}</Paragraph.Text>
-        </div>
-      </ListRow>
-      <ListRow>
-        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-          <Paragraph.Text typography="t6">전체 기록 수</Paragraph.Text>
-          <Paragraph.Text typography="t6">{`${entries.length}건`}</Paragraph.Text>
-        </div>
-      </ListRow>
+      {/* ⚠️ TDS ListRow는 children을 렌더하지 않는다 — 라벨/값은 contents·right 슬롯에. */}
+      <ListRow
+        contents={<Paragraph.Text typography="t6">현재 스트릭</Paragraph.Text>}
+        right={<Paragraph.Text typography="t6">{`${currentStreak}일`}</Paragraph.Text>}
+      />
+      <ListRow
+        contents={<Paragraph.Text typography="t6">최고 스트릭</Paragraph.Text>}
+        right={<Paragraph.Text typography="t6">{`${settings.bestStreak}일`}</Paragraph.Text>}
+      />
+      <ListRow
+        contents={<Paragraph.Text typography="t6">전체 기록 수</Paragraph.Text>}
+        right={<Paragraph.Text typography="t6">{`${entries.length}건`}</Paragraph.Text>}
+      />
 
       <Spacing size={24} />
-      <ListRow onClick={() => setConfirmOpen(true)}>
-        <Paragraph.Text typography="t6">기록 전체 삭제</Paragraph.Text>
-      </ListRow>
+      <ListRow
+        onClick={() => setConfirmOpen(true)}
+        contents={<Paragraph.Text typography="t6">기록 전체 삭제</Paragraph.Text>}
+      />
 
       <AlertDialog
         open={confirmOpen}

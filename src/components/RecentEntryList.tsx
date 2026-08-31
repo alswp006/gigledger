@@ -14,8 +14,8 @@ interface RecentEntryListProps {
   platforms: Platform[];
 }
 
-// ListRow의 left/contents/right는 레이아웃 슬롯 prop이라(children 아님) 실제 콘텐츠는
-// ListRow 안쪽의 커스텀 flex 래퍼(children)에 직접 넣는다 — TDS 텍스트/칩 컴포넌트는 그대로 쓴다.
+// ⚠️ TDS ListRow는 children을 렌더하지 않는다(ListRowProps에 children이 없다 — 실측으로
+// 행이 통째로 빈 칸이 됐다). 콘텐츠는 반드시 left/contents/right 슬롯에 넣어라.
 export function RecentEntryList({ entries, platforms }: RecentEntryListProps) {
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -59,28 +59,20 @@ export function RecentEntryList({ entries, platforms }: RecentEntryListProps) {
             key={entry.id}
             data-testid="recent-entry-row"
             onClick={() => navigate("/entry", { state: { entryId: entry.id } })}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                width: "100%",
-                minHeight: 44,
-              }}
-            >
+            left={
               <Chip variant="weak" size="small">
                 {platformLabel}
               </Chip>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Paragraph.Text typography="t6">
-                  {`${formatDate(entry.date)} · ${platformLabel}`}
-                </Paragraph.Text>
-                <Paragraph.Text typography="t7">{`근무 ${formatMinutes(entry.minutes)}`}</Paragraph.Text>
-              </div>
-              <Amount value={net} typography="t6" />
-            </div>
-          </ListRow>
+            }
+            contents={
+              <ListRow.Texts
+                type="2RowTypeA"
+                top={formatDate(entry.date)}
+                bottom={`근무 ${formatMinutes(entry.minutes)}`}
+              />
+            }
+            right={<Amount value={net} typography="t6" />}
+          />
         );
       })}
       <div ref={sentinelRef} style={{ height: 1 }} />

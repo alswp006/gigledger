@@ -8,6 +8,7 @@ import { SummaryHero } from "@/components/SummaryHero";
 import { Card } from "@/components/Card";
 import { ColorDot } from "@/components/ColorDot";
 import { MiniBar, type MiniBarItem } from "@/components/MiniBar";
+import { AdSection } from "@/components/AdSection";
 import { EmptyState } from "@/components/StateView";
 import { getEntries, getPlatforms } from "@/lib/storage";
 import { calcHourlyWage, calcPeriodSummary, calcPlatformWages } from "@/lib/calc";
@@ -129,37 +130,42 @@ export default function Wage() {
             {rows.map((row) => {
               const isLowWage = row.hourlyWage !== null && row.hourlyWage < MIN_WAGE_2026;
               return (
-                <ListRow key={row.platformId} data-testid="wage-row">
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      width: "100%",
-                      minHeight: 44,
-                    }}
-                  >
-                    <ColorDot colorToken={row.colorToken} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Paragraph.Text typography="t6">{row.platformName}</Paragraph.Text>
-                      <Paragraph.Text typography="t7" color="var(--adaptiveGrey500)">
-                        {`순수입 ${formatKRW(row.netAmount)} · ${formatMinutes(row.totalMinutes)}`}
-                      </Paragraph.Text>
+                // ⚠️ ListRow는 children을 렌더하지 않는다 — 콘텐츠는 left/contents/right 슬롯에.
+                <ListRow
+                  key={row.platformId}
+                  data-testid="wage-row"
+                  left={<ColorDot colorToken={row.colorToken} />}
+                  contents={
+                    <ListRow.Texts
+                      type="2RowTypeA"
+                      top={row.platformName}
+                      bottom={`순수입 ${formatKRW(row.netAmount)} · ${formatMinutes(row.totalMinutes)}`}
+                    />
+                  }
+                  right={
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: 4,
+                      }}
+                    >
+                      <Paragraph.Text typography="t6">{formatWage(row.hourlyWage)}</Paragraph.Text>
                       {isLowWage ? (
-                        <>
-                          <Spacing size={4} />
-                          <Chip variant="weak" size="small">
-                            최저임금 미만
-                          </Chip>
-                        </>
+                        <Chip variant="weak" size="small">
+                          최저임금 미만
+                        </Chip>
                       ) : null}
                     </div>
-                    <Paragraph.Text typography="t6">{formatWage(row.hourlyWage)}</Paragraph.Text>
-                  </div>
-                </ListRow>
+                  }
+                />
               );
             })}
           </Card>
+
+          {/* 랭킹을 다 보여준 뒤 콘텐츠 하단 배너 — 상단 고정/전면 노출 금지 */}
+          <AdSection />
         </>
       )}
 

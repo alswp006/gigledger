@@ -32,9 +32,18 @@ export function mockTds() {
     FixedBottomCTA: ({ children, onClick, disabled, loading, ...props }: any) =>
       React.createElement("button", { onClick, disabled: disabled || loading || undefined, "data-loading": loading ? "true" : undefined, ...props }, children),
 
+    // ⚠️ 실제 TDS ListRow는 children을 렌더하지 않는다(ListRowProps에 children 없음).
+    // 목도 동일하게 left/contents/right 슬롯만 그린다 — children으로 넣은 콘텐츠는
+    // 실기기에서 빈 행이 되므로, 테스트에서도 똑같이 안 보여야 버그가 잡힌다.
     ListRow: Object.assign(
-      ({ children, onClick, ...props }: any) =>
-        React.createElement("div", { onClick, role: "listitem", ...props }, children),
+      ({ left, contents, right, onClick, children: _ignored, ...props }: any) =>
+        React.createElement(
+          "div",
+          { onClick, role: "listitem", ...props },
+          left,
+          contents,
+          right,
+        ),
       {
         Text: ({ children }: any) => React.createElement("span", null, children),
         Texts: ({ top, bottom, type }: any) =>
@@ -70,6 +79,27 @@ export function mockTds() {
           : null,
       {
         AlertButton: ({ children, onClick }: any) =>
+          React.createElement("button", { onClick }, children),
+      },
+    ),
+
+    // 두 버튼(왼쪽 취소/닫기 · 오른쪽 확인) 다이얼로그 — 실제 TDS export와 동일한 모양.
+    ConfirmDialog: Object.assign(
+      ({ open, title, description, cancelButton, confirmButton }: any) =>
+        open
+          ? React.createElement(
+              "div",
+              { role: "alertdialog", "aria-label": title },
+              React.createElement("h2", null, title),
+              React.createElement("p", null, description),
+              cancelButton,
+              confirmButton,
+            )
+          : null,
+      {
+        CancelButton: ({ children, onClick }: any) =>
+          React.createElement("button", { onClick }, children),
+        ConfirmButton: ({ children, onClick }: any) =>
           React.createElement("button", { onClick }, children),
       },
     ),

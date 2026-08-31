@@ -1,3 +1,23 @@
+/*
+ * --tds-color-* 별칭.
+ *
+ * TDSMobileAITProvider가 실제로 주입하는 변수는 --adaptive*(light/dark 자동 분기)뿐이라
+ * --tds-color-blue500 등은 정의되지 않은 채로 남는다(실측: getPropertyValue가 빈 문자열).
+ * 그 값을 background-color에 쓰면 색이 통째로 사라진다 — 플랫폼 색 점·비중 막대가
+ * 투명해져 화면이 비어 보였던 원인이다. 하드코딩 HEX 대신 adaptive 변수로 별칭을 건다.
+ */
+:root {
+  --tds-color-blue500: var(--adaptiveBlue500);
+  --tds-color-green500: var(--adaptiveGreen500);
+  --tds-color-orange500: var(--adaptiveOrange500);
+  --tds-color-purple500: var(--adaptivePurple500);
+  --tds-color-red500: var(--adaptiveRed500);
+  --tds-color-grey500: var(--adaptiveGrey500);
+  --tds-color-grey300: var(--adaptiveGrey300);
+  --tds-color-white: var(--adaptiveWhite);
+  --tds-color-background: var(--adaptiveBackground);
+}
+
 * {
   margin: 0;
   padding: 0;
