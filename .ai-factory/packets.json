@@ -1,0 +1,712 @@
+[
+  {
+    "id": "0001",
+    "title": "엔티티 타입 + RouteState 계약 정의",
+    "epic": "Epic 1. 타입 & 계약",
+    "task": {
+      "description": "src/lib/types.ts에 Platform, PlatformCategory, IncomeEntry, Settings, ReportUnlockMap, 계산 결과 타입(PeriodSummary, StreakResult, WageRow, MonthlyReport), SaveResult 유니온, 그리고 페이지 간 navigate state 계약인 RouteState를 정의한다. 런타임 코드 없이 export type/interface 선언만 작성하며 SPEC Data Models와 필드명·타입이 1:1 일치해야 한다.",
+      "acceptance_criteria": [
+        "RouteState 타입에 '/', '/entry', '/platforms', '/wage', '/report', '/share', '/settings' 7개 키가 존재하고 '/entry'는 { date: string } | { entryId: string } | null, '/share'는 { month: string } | null 이다",
+        "IncomeEntry가 id/platformId/date/amount/expense/minutes/memo/createdAt/updatedAt 9필드, Platform이 id/name/category/colorToken/archived/createdAt 6필드, Settings가 monthlyGoal/bestStreak/noticeSeenAt 3필드를 갖는다",
+        "SaveResult<T> = { ok: true; data: T } | { ok: false; error: string } 형태로 export된다",
+        "npx tsc --noEmit 통과, grep -c \"^const\\|^function\" src/lib/types.ts 결과가 0이다"
+      ]
+    },
+    "covers": [
+      "계약 정의 — 후속 전 AC의 전제"
+    ],
+    "files": [
+      "src/lib/types.ts"
+    ],
+    "definition_of_done": [
+      "src/lib/types.ts만 추가되고 런타임 코드 0건",
+      "npm run build 에러 0"
+    ],
+    "depends_on": [],
+    "db_schema": "interface Platform { id: string; name: string; category: PlatformCategory; colorToken: ColorToken; archived: boolean; createdAt: string } / interface IncomeEntry { id: string; platformId: string; date: string; amount: number; expense: number; minutes: number; memo: string; createdAt: string; updatedAt: string } / interface Settings { monthlyGoal: number; bestStreak: number; noticeSeenAt: string | null } / type ReportUnlockMap = Record<string,string> → localStorage keys: 'gigledger.platforms.v1', 'gigledger.entries.v1', 'gigledger.settings.v1', 'gigledger.reportUnlocks.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0002",
+    "title": "상수 모듈 (STORAGE_KEYS / 한계값 / 색상 토큰)",
+    "epic": "Epic 1. 타입 & 계약",
+    "task": {
+      "description": "src/lib/constants.ts에 localStorage 키, 도메인 한계값(MAX_ENTRIES 등), TDS 색상 토큰 유니온과 CSS 변수 매핑 테이블, 기본 플랫폼 시드 3종을 정의한다. HEX 리터럴은 단 한 건도 포함하지 않으며 색상은 var(--tds-color-*) 문자열로만 표현한다.",
+      "acceptance_criteria": [
+        "STORAGE_KEYS 객체가 platforms/entries/settings/reportUnlocks 4키를 'gigledger.<name>.v1' 값으로 갖는다",
+        "MIN_WAGE_2026=10320, MAX_ENTRIES=5000, MAX_PLATFORMS=20, MAX_AMOUNT=10000000, MAX_MINUTES=1440, MAX_MEMO=50, MAX_PLATFORM_NAME=12, GOAL_MIN=10000, GOAL_MAX=50000000, REPORT_MONTH_RANGE=12 이 모두 export된다",
+        "COLOR_TOKENS = ['blue','green','orange','purple','red','grey'] as const 와 ColorToken 타입이 export되고 colorVar('blue') === 'var(--tds-color-blue500)' 를 반환한다",
+        "DEFAULT_PLATFORM_SEEDS에 배달/delivery, 대리운전/driving, 쿠팡플렉스/logistics 3건이 순서대로 존재하고 파일 내 '#' 색상 리터럴 0건"
+      ]
+    },
+    "covers": [
+      "F1-AC1 상수 근거",
+      "AC-G4"
+    ],
+    "files": [
+      "src/lib/constants.ts"
+    ],
+    "definition_of_done": [
+      "npx tsc --noEmit 통과",
+      "grep -n '#[0-9a-fA-F]\\{3,6\\}' src/lib/constants.ts 결과 0건"
+    ],
+    "depends_on": [
+      "0001"
+    ],
+    "db_schema": "STORAGE_KEYS = { platforms:'gigledger.platforms.v1', entries:'gigledger.entries.v1', settings:'gigledger.settings.v1', reportUnlocks:'gigledger.reportUnlocks.v1' }",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0003",
+    "title": "포맷/날짜/ID 유틸 (순수 함수)",
+    "epic": "Epic 2. 데이터 레이어",
+    "task": {
+      "description": "CP-2 표기 규칙을 구현하는 format.ts(금액·시간·시급·증감률), 날짜 키 유틸 date.ts(toDateKey/toMonthKey/startOfWeek 월요일 고정/addMonthKey), genId 폴백을 담은 id.ts를 작성한다. Android 7 호환을 위해 Array.prototype.at / Object.groupBy / toSorted / 정규식 lookbehind를 사용하지 않는다.",
+      "acceptance_criteria": [
+        "formatKRW(1250000)==='1,250,000원', formatKRW(0)==='0원', formatMinutes(330)==='5시간 30분', formatMinutes(0)==='0시간 0분'",
+        "formatWage(null)==='—', formatWage(-3000)==='-3,000원', formatDelta(2100000,1750000)==='+20%', formatDelta(x,0)==='—'",
+        "toDateKey(new Date(2026,7,31))==='2026-08-31', toMonthKey('2026-08-31')==='2026-08', startOfWeek('2026-08-30'(일))가 6일 전 월요일 키를 반환, addMonthKey('2026-01',-1)==='2025-12'",
+        "genId()가 crypto.randomUUID 미지원 시 Date.now().toString(36)+Math.random().toString(36).slice(2,10)로 폴백하고 길이 8~24자, 1000회 호출 중복 0건",
+        "grep -rn \"\\.at(\\|Object.groupBy\\|toSorted\" src/lib/ 결과 0건"
+      ]
+    },
+    "covers": [
+      "AC-G5",
+      "CP-2"
+    ],
+    "files": [
+      "src/lib/format.ts",
+      "src/lib/date.ts",
+      "src/lib/id.ts"
+    ],
+    "definition_of_done": [
+      "npx tsc --noEmit 통과",
+      "npm run build 에러 0"
+    ],
+    "depends_on": [
+      "0002"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0004",
+    "title": "검증 모듈 validate.ts (고정 에러 문구)",
+    "epic": "Epic 2. 데이터 레이어",
+    "task": {
+      "description": "엔트리/플랫폼 이름/목표 금액에 대한 검증 함수를 고정 에러 문구와 함께 구현한다. localStorage 접근 없음. validateEntry는 platformId의 존재 여부와 archived 상태를 검사하지 않는다(보관 플랫폼 기록 수정 허용) — 이 규칙을 파일 상단 주석 1줄로 명시한다. 활성 플랫폼 제한은 입력 UI에서만 수행한다.",
+      "acceptance_criteria": [
+        "validateEntry({amount:0}) → {ok:false,error:'금액을 입력해주세요'}, expense>amount → '경비는 수입보다 클 수 없어요', date:'2099-01-01' → '미래 날짜는 기록할 수 없어요'",
+        "amount>10000000 → '금액은 1,000만원까지 입력할 수 있어요', minutes>1440 → '근무 시간은 24시간을 넘을 수 없어요', platformId 빈 값 → '플랫폼을 선택해주세요'",
+        "archived:true인 p2 참조 기록의 amount만 변경해 validateEntry 호출 시 {ok:true}, platformId:'deleted-x'인 경우도 {ok:true}",
+        "validatePlatformName('',list) → '플랫폼 이름을 입력해주세요', validatePlatformName(' 배달 ',[{name:'배달'}]) → '이미 등록된 플랫폼이에요'(archived 무관 전체 대상), 13자 이상 → '12자까지 입력할 수 있어요'",
+        "validateGoal(5000) → '목표는 10,000원 이상으로 설정해주세요', validateGoal(100000000) → '목표는 5,000만원까지 설정할 수 있어요', validateGoal(0) → {ok:true}"
+      ]
+    },
+    "covers": [
+      "F1-AC6",
+      "F2-AC2",
+      "F2-AC3",
+      "F2-AC4",
+      "F3-AC4",
+      "F3-AC5",
+      "F6-AC6"
+    ],
+    "files": [
+      "src/lib/validate.ts"
+    ],
+    "definition_of_done": [
+      "모든 반환이 {ok:true} | {ok:false,error:string} 단일 shape",
+      "npx tsc --noEmit 통과"
+    ],
+    "depends_on": [
+      "0002"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0005",
+    "title": "localStorage 리포지토리 storage.ts",
+    "epic": "Epic 2. 데이터 레이어",
+    "task": {
+      "description": "4개 키에 대한 안전한 읽기/쓰기 리포지토리를 구현한다. 최초 실행 시 기본 플랫폼 3종 시드, 손상 JSON 캐치 후 빈 배열 초기화 + corrupted 플래그 노출, QuotaExceededError 흡수, MAX_ENTRIES 상한 처리를 모두 이 레이어에서 담당한다. UI는 이 모듈만 통해 저장소에 접근한다.",
+      "acceptance_criteria": [
+        "getPlatforms() 호출 시 키가 없으면 배달/대리운전/쿠팡플렉스 3건이 고유 id, archived:false, ISO8601 createdAt과 함께 생성·저장된다",
+        "saveEntry({platformId:'p1',date:'2026-08-31',amount:128000,expense:18000,minutes:330,memo:'피크타임'}) → {ok:true}이고 entries 길이 +1, id/createdAt/updatedAt 채워짐. 기존 id 포함 호출 시 해당 레코드만 갱신되고 배열 길이 불변",
+        "deleteEntry(id) 후 getEntries()에 해당 id가 없다",
+        "entries 5000건 상태에서 saveEntry → {ok:false,error:'기록은 최대 5,000건까지 저장할 수 있어요'}, 저장소 길이 5000 유지",
+        "setItem이 QuotaExceededError를 던지도록 모킹 시 throw 없이 {ok:false,error:'저장 공간이 부족해요. 오래된 기록을 삭제해주세요'} 반환, localStorage.setItem('gigledger.entries.v1','{{broken') 후 getEntries()가 []와 corrupted:true를 반환"
+      ]
+    },
+    "covers": [
+      "F1-AC1",
+      "F1-AC2",
+      "AC-G9",
+      "AC-G10"
+    ],
+    "files": [
+      "src/lib/storage.ts"
+    ],
+    "definition_of_done": [
+      "예외 전파 0건 (모든 JSON.parse/setItem이 try-catch로 감싸짐)",
+      "npx tsc --noEmit 통과"
+    ],
+    "depends_on": [
+      "0004"
+    ],
+    "db_schema": "Platform[] @ 'gigledger.platforms.v1', IncomeEntry[] @ 'gigledger.entries.v1', Settings @ 'gigledger.settings.v1', ReportUnlockMap @ 'gigledger.reportUnlocks.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0006",
+    "title": "계산 순수 함수 calc.ts",
+    "epic": "Epic 2. 데이터 레이어",
+    "task": {
+      "description": "기간 합산(주/월/전체), 실질 시급, 스트릭, 목표 달성률, 플랫폼별 시급 랭킹, 월간 리포트 지표, 최근 14일 추이 포인트를 계산하는 순수 함수를 구현한다. 주 시작은 월요일 고정, 시급 분모 0이면 null 반환. UI는 이 계산을 절대 재구현하지 않는다.",
+      "acceptance_criteria": [
+        "calcHourlyWage([{amount:128000,expense:18000,minutes:330},{amount:60000,expense:0,minutes:120}]) === 22667 (Math.round(170000/(450/60)))",
+        "calcHourlyWage([{amount:50000,expense:0,minutes:0}]) === null (예외 없음)",
+        "calcStreak(entries,'2026-08-31')가 날짜 ['2026-08-31','2026-08-30','2026-08-29','2026-08-27']에서 {current:3,lastDate:'2026-08-31'}, ['2026-08-29']만 있으면 {current:0,lastDate:'2026-08-29'}",
+        "calcPeriodSummary가 {income,expense,net,minutes,wage} 를 반환하고 net===income-expense, 빈 배열 입력 시 모두 0 및 wage===null",
+        "calcGoalRate(1200000,3000000)===40 (정수 %), monthlyGoal 0이면 null 반환"
+      ]
+    },
+    "covers": [
+      "F1-AC3",
+      "F1-AC4",
+      "F1-AC5",
+      "F4",
+      "F5",
+      "F6"
+    ],
+    "files": [
+      "src/lib/calc.ts"
+    ],
+    "definition_of_done": [
+      "모든 함수가 부수효과 없이 인자만으로 결과를 결정한다",
+      "npx tsc --noEmit 통과"
+    ],
+    "depends_on": [
+      "0003"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0007",
+    "title": "상태 관리 훅 useLedger",
+    "epic": "Epic 2. 데이터 레이어",
+    "task": {
+      "description": "storage.ts를 감싸 platforms/entries/settings/reportUnlocks를 로드·갱신하는 React 훅을 구현한다. bestStreak는 부팅 1회가 아니라 entries가 변경될 때마다 실행되는 파생 효과로 동기화해 '기록 저장 → 홈 복귀' 경로에서도 즉시 갱신되게 한다. corrupted 플래그와 저장 실패 에러 문구를 상위로 노출한다.",
+      "acceptance_criteria": [
+        "useLedger()가 { platforms, entries, settings, reportUnlocks, loading, corrupted, saveEntry, removeEntry, addPlatform, updatePlatform, archivePlatform, updateSettings, unlockReport } 를 반환한다",
+        "entries가 변경될 때마다 calcStreak 결과의 current가 settings.bestStreak보다 크면 bestStreak를 갱신·저장한다 (useEffect 의존성 배열에 entries 포함)",
+        "saveEntry 실패 시 반환값 {ok:false,error}를 그대로 전달하고 훅 내부 상태는 변경되지 않는다",
+        "corrupted가 true이면 소비 컴포넌트가 Toast를 띄울 수 있도록 boolean으로 노출되고 앱은 빈 데이터로 정상 렌더된다",
+        "초기 로드 중 loading===true이며 로드 완료 후 false로 전환된다"
+      ]
+    },
+    "covers": [
+      "F6-AC4",
+      "AC-G9",
+      "AC-G10"
+    ],
+    "files": [
+      "src/hooks/useLedger.ts"
+    ],
+    "definition_of_done": [
+      "npx tsc --noEmit 통과",
+      "훅이 storage.ts 외의 localStorage 직접 접근을 하지 않는다"
+    ],
+    "depends_on": [
+      "0005",
+      "0006"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": ""
+  },
+  {
+    "id": "0008",
+    "title": "시각화 공용 컴포넌트 (SummaryHero / Sparkline / MiniBar / ColorDot)",
+    "epic": "Epic 3. 공용 UI 컴포넌트",
+    "task": {
+      "description": "홈·시급·리포트에서 공용으로 쓰는 시각화 컴포넌트를 만든다. SummaryHero(라벨+금액+캡션), Sparkline(최근 14일 추이 SVG), MiniBar(플랫폼 비중 가로 막대), ColorDot(플랫폼 색상 점). 모든 색상은 constants의 colorVar()/var(--tds-color-*)만 사용하고 HEX 0건.",
+      "acceptance_criteria": [
+        "SummaryHero가 label/value/caption props를 받아 TDS Paragraph.Text로 렌더하고 data-testid='summary-hero'를 갖는다",
+        "Sparkline이 points: number[]를 받아 SVG polyline을 그리며 points가 빈 배열이면 '데이터가 없어요' 텍스트를 렌더하고 크래시하지 않는다",
+        "MiniBar가 items:[{label,percent,colorToken}]를 받아 각 막대 너비를 percent%로 렌더하고 data-testid='platform-minibar'를 갖는다",
+        "ColorDot이 colorToken을 받아 colorVar(token)를 배경색으로 적용하며 6종 토큰 모두 렌더 가능",
+        "src/components 하위 신규 파일에 '#RRGGBB' 리터럴 0건, Tailwind 여백 클래스 0건"
+      ]
+    },
+    "covers": [
+      "AC-G4",
+      "F4",
+      "F5"
+    ],
+    "files": [
+      "src/components/SummaryHero.tsx",
+      "src/components/Sparkline.tsx",
+      "src/components/MiniBar.tsx",
+      "src/components/ColorDot.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "각 컴포넌트가 props만으로 렌더되며 localStorage 접근 없음"
+    ],
+    "depends_on": [
+      "0002"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "TDS Paragraph.Text, Spacing만 사용. 커스텀 CSS는 flex/grid 배치와 SVG에만 허용. SummaryHero: label(typography=\"st13\" color=\"secondary\") + value(typography=\"t1\") + caption(typography=\"st13\" color=\"tertiary\"). Sparkline: 높이 56px, stroke='var(--tds-color-blue500)', 반응형 width 100%. MiniBar: 각 행 = ColorDot + 라벨 + 막대(height 6, borderRadius 3, 트랙 var(--tds-color-grey100), 채움 colorVar(token)) + 우측 퍼센트. 고정 width 금지."
+  },
+  {
+    "id": "0009",
+    "title": "레이아웃/상태 공용 컴포넌트 (SubmitFooter / EmptyState / SkeletonBlock)",
+    "epic": "Epic 3. 공용 UI 컴포넌트",
+    "task": {
+      "description": "페이지 공통 상태 UI를 만든다. SubmitFooter(하단 고정 CTA, safe-area 대응), EmptyState(아이콘+제목+설명+CTA 버튼), SkeletonBlock(로딩 회색 박스). 모두 TDS Button/Paragraph.Text/Asset.ContentIcon만 사용하고 하단 고정 요소에는 env(safe-area-inset-bottom)을 적용한다.",
+      "acceptance_criteria": [
+        "SubmitFooter가 position:fixed 하단에 렌더되고 paddingBottom: 'calc(16px + env(safe-area-inset-bottom))'을 적용하며 버튼 높이가 44px 이상",
+        "EmptyState가 title/description/action props를 받아 TDS Asset.ContentIcon + Paragraph.Text + Button(variant='weak', display='block')로 렌더하고 이모지를 사용하지 않는다",
+        "SkeletonBlock이 height prop을 받아 var(--tds-color-grey50) 배경 박스를 렌더하고 data-testid를 prop으로 지정할 수 있다",
+        "세 컴포넌트 모두 HEX 리터럴 0건, Tailwind p-*/gap-* 클래스 0건"
+      ]
+    },
+    "covers": [
+      "AC-G8",
+      "AC-G4"
+    ],
+    "files": [
+      "src/components/SubmitFooter.tsx",
+      "src/components/EmptyState.tsx",
+      "src/components/SkeletonBlock.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "모든 인터랙티브 요소 높이 44px 이상"
+    ],
+    "depends_on": [
+      "0002"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "TDS Button, Paragraph.Text, Asset.ContentIcon, Spacing 사용. SubmitFooter: fixed bottom, 배경 var(--tds-color-background), Button display=\"block\" size=\"large\", disabled 상태 지원. EmptyState: 중앙 정렬 flex column, ContentIcon → Spacing size={12} → title(typography=\"t5\") → Spacing size={4} → description(typography=\"st13\" color=\"secondary\") → Spacing size={16} → action. SkeletonBlock: borderRadius 12, width 100%."
+  },
+  {
+    "id": "0010",
+    "title": "/settings 설정 화면",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "월 목표 금액 설정, 최고 스트릭 표시, 데이터 초기화(AlertDialog 확인), 최초 온보딩 안내 확인 시각 저장을 담당하는 설정 화면을 만든다. 목표 입력은 validateGoal 결과를 TextField 에러 상태로 표시하고, 저장 성공 시 Toast와 햅틱 피드백을 준다.",
+      "acceptance_criteria": [
+        "목표 TextField에 5000 입력 후 저장 시 '목표는 10,000원 이상으로 설정해주세요'가 help 텍스트로 표시되고 저장되지 않는다",
+        "3000000 입력 후 저장 시 Toast '목표를 저장했어요'가 뜨고 새로고침 후에도 값이 유지된다",
+        "'기록 전체 삭제' ListRow 탭 시 AlertDialog가 열리고 왼쪽 버튼 라벨이 '닫기'이며 오른쪽 확인 시 entries가 0건이 된다",
+        "현재 스트릭과 최고 스트릭(settings.bestStreak)이 ListRow로 표시되고 기록이 없으면 각각 '0일'로 표시된다",
+        "저장 버튼 탭 시 generateHapticFeedback({type:'success'})가 호출된다"
+      ]
+    },
+    "covers": [
+      "F6-AC6",
+      "AC-G8"
+    ],
+    "files": [
+      "src/pages/Settings.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "HEX 리터럴 0건, window.open/location.href 0건"
+    ],
+    "depends_on": [
+      "0007"
+    ],
+    "db_schema": "Settings { monthlyGoal: number; bestStreak: number; noticeSeenAt: string | null } → 'gigledger.settings.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "ScreenScaffold + Top(title='설정'). 구성: Top → Spacing size={16} → Paragraph.Text typography=\"t5\" '월 목표' → TextField variant=\"box\" label=\"월 목표 금액\" inputMode=\"numeric\" pattern=\"[0-9]*\" hasError help=에러문구 → Spacing size={12} → Button display=\"block\" size=\"large\" '저장' → Spacing size={24} → Paragraph.Text typography=\"t5\" '기록' → ListRow contents={<ListRow.Texts type=\"2RowTypeA\" top=\"연속 기록\" bottom=\"3일\" />} → ListRow(최고 기록) → ListRow(전체 기록 수) → Spacing size={24} → ListRow onClick={openReset} contents 'ıv기록 전체 삭제' → AlertDialog(왼쪽 '닫기', 오른쪽 '삭제'). Toast bottom. FloatingTabBar. 색상 var(--tds-color-*)만."
+  },
+  {
+    "id": "0011",
+    "title": "/platforms 플랫폼 관리 화면",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "플랫폼 목록 조회, 추가(BottomSheet: 이름 TextField + 카테고리 Chip + 색상 Chip 6종), 이름/색상 수정, 보관(archived) 토글을 제공하는 화면을 만든다. 보관해도 과거 기록은 유지되며 목록에서는 '보관됨' 배지로 구분한다. 최대 20개 제한을 UI에서 안내한다.",
+      "acceptance_criteria": [
+        "기본 3개 플랫폼(배달/대리운전/쿠팡플렉스)이 ListRow로 표시되고 각 행 왼쪽에 ColorDot이 렌더된다",
+        "추가 BottomSheet에서 색상 Chip 6종(blue/green/orange/purple/red/grey)이 렌더되고 선택된 Chip만 variant='filled'로 표시된다",
+        "이미 등록된 이름 ' 배달 '을 입력해 저장 시 TextField help에 '이미 등록된 플랫폼이에요'가 표시되고 목록 길이가 변하지 않는다",
+        "Switch로 보관 토글 시 archived가 true가 되고 목록에 '보관됨' Chip이 붙으며 과거 기록 건수는 변하지 않는다",
+        "플랫폼이 20개일 때 추가 버튼 탭 시 Toast '플랫폼은 최대 20개까지 추가할 수 있어요'가 표시된다"
+      ]
+    },
+    "covers": [
+      "F2-AC2",
+      "F2-AC3",
+      "F2-AC4"
+    ],
+    "files": [
+      "src/pages/Platforms.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "validate.ts/storage.ts 외 저장 로직 재구현 없음"
+    ],
+    "depends_on": [
+      "0007",
+      "0008"
+    ],
+    "db_schema": "Platform { id; name; category: 'delivery'|'driving'|'logistics'|'freelance'|'etc'; colorToken: ColorToken; archived: boolean; createdAt } → 'gigledger.platforms.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "ScreenScaffold + Top(title='플랫폼 관리', right=<Button variant=\"weak\" size=\"small\">추가</Button>). 목록: ListRow left={<ColorDot colorToken={p.colorToken} />} contents={<ListRow.Texts type=\"2RowTypeA\" top={p.name} bottom={카테고리 라벨} />} right={<Switch checked={!p.archived} />}. 보관 시 이름 옆 Chip label=\"보관됨\" variant=\"outlined\". 추가/수정 BottomSheet: TextField variant=\"box\" label=\"플랫폼 이름\" maxLength 12 → Spacing size={16} → Paragraph.Text typography=\"t5\" '카테고리' → Chip 그룹(배달/대리운전/물류/프리랜스/기타) → Spacing size={16} → Paragraph.Text typography=\"t5\" '색상' → div flex gap 8에 Chip 6종(각 Chip 왼쪽에 ColorDot, 선택 시 variant=\"filled\") → Spacing size={16} → Button display=\"block\" size=\"large\" '저장'. Chip 탭 시 generateHapticFeedback({type:'tickWeak'}). Empty: EmptyState. Toast bottom. 터치 타깃 44px 이상."
+  },
+  {
+    "id": "0012",
+    "title": "/entry 수입 입력/수정 화면",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "날짜·플랫폼·총수입·경비·근무 시간·메모를 입력해 기록을 저장/수정/삭제하는 화면을 만든다. location.state의 { date } 또는 { entryId }로 모드를 결정하고, 플랫폼 Chip은 archived===false인 활성 플랫폼만 노출하되 수정 모드에서 기존 참조가 보관된 플랫폼이면 해당 Chip을 예외적으로 함께 표시한다.",
+      "acceptance_criteria": [
+        "location.state가 { entryId }이면 해당 기록 값이 각 TextField에 채워지고 Top 우측에 '삭제' 버튼이 렌더되며, state가 null이면 오늘 날짜로 신규 모드로 열린다",
+        "플랫폼 Chip 영역에 archived===true 플랫폼이 표시되지 않는다. 단 수정 중인 기록이 보관 플랫폼을 참조하면 그 플랫폼 Chip은 표시되고 선택 상태로 시작한다",
+        "금액 빈 값으로 저장 시 총수입 TextField가 hasError가 되고 help에 '금액을 입력해주세요'가 표시되며 저장되지 않는다",
+        "경비 200000 / 총수입 128000으로 저장 시 '경비는 수입보다 클 수 없어요'가 표시되고 저장되지 않는다",
+        "저장 성공 시 generateHapticFeedback({type:'success'}) 호출 후 navigate('/')로 이동하고 홈 최근 기록에 해당 항목이 나타난다",
+        "삭제 버튼 탭 시 AlertDialog(왼쪽 '닫기') 확인 후 기록이 제거되고 홈으로 이동한다"
+      ]
+    },
+    "covers": [
+      "F3-AC1",
+      "F3-AC2",
+      "F3-AC4",
+      "F3-AC5",
+      "F1-AC2"
+    ],
+    "files": [
+      "src/pages/Entry.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "location.state 접근이 RouteState['/entry'] 타입으로 좁혀지고 null 방어 처리됨"
+    ],
+    "depends_on": [
+      "0007",
+      "0009"
+    ],
+    "db_schema": "IncomeEntry { id; platformId; date:'YYYY-MM-DD'; amount:1~10000000; expense:0~amount; minutes:0~1440; memo:0~50자; createdAt; updatedAt } → 'gigledger.entries.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "Pattern D (Top+우측액션 + FixedBottomCTA). ScreenScaffold + Top title='수입 기록' right={isEdit ? <Button variant=\"weak\" size=\"small\" color=\"danger\">삭제</Button> : undefined} → Spacing size={16} → ListRow onClick={openDateSheet} contents={<ListRow.Texts type=\"2RowTypeA\" top=\"날짜\" bottom=\"2026년 8월 31일\" />} → Spacing size={16} → Paragraph.Text typography=\"t5\" '플랫폼' → Spacing size={8} → div data-testid=\"platform-chips\" style={{display:'flex',gap:8,overflowX:'auto'}}에 Chip(선택 시 variant=\"filled\" selected, 아니면 \"outlined\") → Spacing size={24} → TextField variant=\"box\" label=\"총수입\" inputMode=\"numeric\" pattern=\"[0-9]*\" hasError help → Spacing size={12} → TextField label=\"경비\" 동일 옵션 → Spacing size={12} → TextField label=\"근무 시간(분)\" help=\"24시간까지 입력할 수 있어요\" → Spacing size={12} → TextField label=\"메모\" maxLength 50 → SubmitFooter(Button display=\"block\" size=\"large\" '저장'). States — Loading: SkeletonBlock 3개 / Error: Toast bottom / Empty(활성 플랫폼 0개): EmptyState title='플랫폼을 먼저 추가해주세요' action=Button '플랫폼 추가하기' → navigate('/platforms'). 색상 var(--tds-color-*)만, 이모지 금지."
+  },
+  {
+    "id": "0013",
+    "title": "/ 홈 — 요약 섹션 (Tab/Hero/스트릭/목표/차트)",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "홈 상단 요약 섹션을 만든다. 주간/월간 Tab 전환, SummaryHero 순수입, 스트릭 카드, 목표 달성률 카드(미설정 시 CTA), 최근 14일 Sparkline, 플랫폼 비중 MiniBar를 렌더한다. 계산은 전부 calc.ts를 호출하고 화면에서 재구현하지 않는다.",
+      "acceptance_criteria": [
+        "Tab '주간'/'월간' 전환 시 SummaryHero의 label이 '이번 주 순수입'/'이번 달 순수입'으로 바뀌고 값이 해당 기간 합계로 재계산되며 generateHapticFeedback({type:'tickWeak'})가 호출된다",
+        "캡션이 '총수입 188,000원 · 경비 23,000원 · 근무 7시간 30분' 형식으로 CP-2 표기 규칙에 맞게 렌더된다",
+        "monthlyGoal===0이면 목표 카드에 '이번 달 목표를 정해보세요' + Button weak '목표 설정'이 렌더되고 탭 시 navigate('/settings')",
+        "기록이 0건이면 EmptyState(title='아직 기록이 없어요', description='오늘 번 돈을 기록해보세요', action='수입 기록하기')가 렌더되고 Hero/차트는 렌더되지 않는다",
+        "loading 중에는 data-testid='home-skeleton'이 렌더되고 SummaryHero는 렌더되지 않는다"
+      ]
+    },
+    "covers": [
+      "F4-AC1",
+      "F4-AC2",
+      "F6-AC1",
+      "F6-AC4"
+    ],
+    "files": [
+      "src/pages/Home.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "calc.ts 외 합산 로직 재구현 0건"
+    ],
+    "depends_on": [
+      "0007",
+      "0008",
+      "0009"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "Pattern: PageShell + StatusPanel. ScreenScaffold → Top title={<Top.TitleParagraph>GigLedger</Top.TitleParagraph>} → Tab onChange로 period 'week'|'month' 전환(Tab.Item selected) → Spacing size={16} → SummaryHero data-testid=\"summary-hero\" label={period==='week'?'이번 주 순수입':'이번 달 순수입'} value={<Amount/Paragraph.Text typography=\"t1\">} caption=\"총수입 188,000원 · 경비 23,000원 · 근무 7시간 30분\" → Spacing size={16} → div style={{display:'flex',gap:12}}에 카드 2개: streak-card(Paragraph.Text t4 '3일 연속 기록 중' + st13 tertiary '최고 5일'), goal-card(t3 '40%' + st13 secondary '1,200,000원 / 3,000,000원' + 진행바 div height 6 borderRadius 3 트랙 var(--tds-color-grey100) 채움 var(--tds-color-blue500) width 40%) → Spacing size={16} → Paragraph.Text t5 '최근 14일 추이' → Sparkline data-testid=\"trend-sparkline\" → Spacing size={16} → MiniBar data-testid=\"platform-minibar\"(더보기 탭 시 navigate('/wage')). States — Loading: data-testid=\"home-skeleton\" 회색 박스 3개(var(--tds-color-grey50)) / Empty: EmptyState + Button weak display=\"block\" '수입 기록하기' → navigate('/entry') / Error: Toast bottom '일부 저장 데이터를 불러오지 못했어요' 후 Empty 렌더. 고정 width 금지."
+  },
+  {
+    "id": "0014",
+    "title": "/ 홈 — 최근 기록 리스트 + 무한 스크롤",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "홈 하단의 최근 기록 리스트를 별도 컴포넌트로 구현한다. 날짜 내림차순 정렬, 30건 초기 렌더, IntersectionObserver로 하단 200px 진입 시 30건 추가 로드, DOM ListRow 100개 이하 유지. 각 행 탭 시 해당 기록 수정 화면으로 이동한다.",
+      "acceptance_criteria": [
+        "기록이 date 내림차순으로 정렬되어 렌더되고 초기 렌더 ListRow 개수가 30 이하",
+        "하단 sentinel이 뷰포트에 진입하면 30건이 추가 렌더되고 DOM 내 ListRow 개수가 항상 100 이하로 유지된다",
+        "각 행은 left=Chip(플랫폼명), 상단 '8월 31일 · 배달', 하단 '근무 5시간 30분', 우측 순수입 '110,000원'을 표시하고 탭 시 navigate('/entry',{state:{entryId}})",
+        "platformId가 저장소에 없으면 Chip 라벨이 '삭제된 플랫폼'으로 표시되고 크래시하지 않는다",
+        "기록 0건이면 이 컴포넌트가 아무것도 렌더하지 않는다(Empty는 Home이 담당)"
+      ]
+    },
+    "covers": [
+      "F4-AC3",
+      "F4-AC4"
+    ],
+    "files": [
+      "src/components/RecentEntryList.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "IntersectionObserver observer가 unmount 시 disconnect된다"
+    ],
+    "depends_on": [
+      "0007"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "Pattern F(리스트). Paragraph.Text typography=\"t5\" '최근 기록' → Spacing size={8} → ListRow onClick={() => navigate('/entry',{state:{entryId:e.id}})} left={<Chip label=\"배달\" variant=\"filled\" />} contents={<ListRow.Texts type=\"2RowTypeA\" top=\"8월 31일 · 배달\" bottom=\"근무 5시간 30분\" />} right={<Paragraph.Text typography=\"t6\">110,000원</Paragraph.Text>} → 하단 sentinel div(height 1). ListRow에 padding prop 금지, 간격은 Spacing만. 각 행 높이 44px 이상. 색상 var(--tds-color-*)만."
+  },
+  {
+    "id": "0015",
+    "title": "/wage 실질 시급 화면",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "플랫폼별 실질 시급 랭킹 화면을 만든다. 기간 Tab(주간/월간/전체) 전환, 시급 내림차순 정렬, 최저임금(MIN_WAGE_2026=10320) 미만 항목 경고 표시, 근무시간 0분 플랫폼은 '—' 표시. location.state의 { period }를 초기 탭으로 반영한다.",
+      "acceptance_criteria": [
+        "기간 Tab 전환 시 calcWageRows 결과가 재계산되어 시급 내림차순으로 재정렬된다",
+        "근무시간 합이 0인 플랫폼 행의 시급 표시가 '—'이고 정렬 시 최하단에 배치되며 NaN/Infinity가 렌더되지 않는다",
+        "시급이 10320 미만인 행에 '최저임금 미만' Chip이 표시되고 10320 이상 행에는 표시되지 않는다",
+        "location.state가 { period: 'month' }이면 월간 탭이 선택된 상태로 진입하고 state가 null이면 주간이 기본값이다",
+        "해당 기간 기록이 0건이면 EmptyState(title='아직 계산할 기록이 없어요')가 렌더된다"
+      ]
+    },
+    "covers": [
+      "F5-AC1",
+      "F5-AC2",
+      "F5-AC3"
+    ],
+    "files": [
+      "src/pages/Wage.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "시급 계산은 calc.ts calcHourlyWage만 사용"
+    ],
+    "depends_on": [
+      "0007",
+      "0008"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "ScreenScaffold + Top title='실질 시급' → Tab(주간/월간/전체, Tab.Item selected) → Spacing size={16} → SummaryHero label='전체 평균 실질 시급' value=Paragraph.Text typography=\"t1\" caption='순수입 170,000원 · 근무 7시간 30분' → Spacing size={16} → MiniBar(플랫폼별 시급 비중) → Spacing size={16} → ListRow left={<ColorDot colorToken />} contents={<ListRow.Texts type=\"2RowTypeA\" top=\"배달\" bottom=\"순수입 110,000원 · 5시간 30분\" />} right={<Paragraph.Text typography=\"t6\">20,000원</Paragraph.Text>}, 최저임금 미만 행에는 Chip label=\"최저임금 미만\" variant=\"outlined\". States — Loading: SkeletonBlock 3개 / Empty: EmptyState title='아직 계산할 기록이 없어요' description='수입을 기록하면 시급을 계산해드려요' action=Button '수입 기록하기' → navigate('/entry'). Tab 전환 시 generateHapticFeedback({type:'tickWeak'}). FloatingTabBar. 색상 var(--tds-color-*)만."
+  },
+  {
+    "id": "0016",
+    "title": "/report 월 네비게이션 + 리워드 광고 게이트",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "월간 리포트의 상단 월 이동 컨트롤과 리워드 광고 해금 게이트를 구현한다. 최대 12개월 범위로 이전/다음 월 이동, 해금되지 않은 월은 TossRewardAd로 본문을 감싸고 광고 시청 완료 시 reportUnlocks에 'YYYY-MM' → ISO 시각을 저장해 재방문 시 바로 열리게 한다.",
+      "acceptance_criteria": [
+        "초기 진입 시 현재 월이 선택되고 location.state의 { month }가 있으면 해당 월로 진입한다",
+        "이전/다음 버튼으로 최대 12개월 이전까지 이동 가능하며 범위를 벗어나는 방향의 버튼은 disabled 처리된다",
+        "해금되지 않은 월에서는 잠금 안내와 함께 <TossRewardAd slotId={import.meta.env.VITE_TOSS_AD_SLOT_ID}>로 감싼 본문만 노출되고 지표 값이 보이지 않는다",
+        "광고 시청 완료 후 reportUnlocks에 해당 'YYYY-MM' 키가 저장되고 새로고침 후 재진입 시 광고 없이 본문이 바로 표시된다",
+        "다음 달(미래) 이동은 불가하며 현재 월이 최대값이다"
+      ]
+    },
+    "covers": [
+      "F7-AC1",
+      "F7-AC2"
+    ],
+    "files": [
+      "src/pages/Report.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "TossRewardAd/AdSlot 외 광고 SDK 직접 호출 0건"
+    ],
+    "depends_on": [
+      "0007",
+      "0009"
+    ],
+    "db_schema": "ReportUnlockMap = Record<'YYYY-MM', ISO8601> → 'gigledger.reportUnlocks.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "ScreenScaffold + Top title='월간 리포트'. 월 네비: div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}에 Button variant=\"weak\" size=\"small\" '이전' + Paragraph.Text typography=\"t4\" '2026년 8월' + Button variant=\"weak\" size=\"small\" '다음'(각 44px 이상) → Spacing size={16} → 잠금 상태: EmptyState 스타일 안내(Asset.ContentIcon + Paragraph.Text t5 '광고를 보면 이번 달 리포트를 볼 수 있어요') 후 <TossRewardAd slotId={import.meta.env.VITE_TOSS_AD_SLOT_ID}>{리포트 본문}</TossRewardAd> → 해금 후 본문 렌더. States — Loading: SkeletonBlock 2개 / Empty(해당 월 기록 0건): EmptyState title='이 달은 기록이 없어요'. Toast bottom. 색상 var(--tds-color-*)만, 이모지 금지."
+  },
+  {
+    "id": "0017",
+    "title": "/report 본문 지표 컴포넌트 + 공유 이동",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "월간 리포트 본문 지표를 별도 컴포넌트로 구현한다. 총수입·경비·순수입·근무시간·실질시급, 전월 대비 증감률, 플랫폼별 비중, 최다 수입일을 표시하고 하단에 '공유 카드 만들기' 버튼으로 /share로 이동한다. 지표 계산은 calc.ts만 사용한다.",
+      "acceptance_criteria": [
+        "총수입/경비/순수입/근무시간/실질시급이 CP-2 표기 규칙(1,250,000원 · 5시간 30분)으로 렌더된다",
+        "전월 대비 증감률이 Math.round((a-b)/b*1000)/10 결과로 '+20%' 형식으로 표시되고 전월이 0이면 '—'로 표시된다",
+        "근무시간 합이 0이면 실질시급이 '—'로 표시되고 NaN이 렌더되지 않는다",
+        "플랫폼별 비중이 MiniBar로 표시되고 비중 합이 100%를 넘지 않는다",
+        "'공유 카드 만들기' 버튼 탭 시 navigate('/share',{state:{month}})로 이동한다"
+      ]
+    },
+    "covers": [
+      "F7-AC3",
+      "F7-AC4"
+    ],
+    "files": [
+      "src/components/ReportBody.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "계산 로직은 calc.ts/format.ts 호출만 사용"
+    ],
+    "depends_on": [
+      "0006",
+      "0008"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "SummaryHero label='8월 순수입' value=Paragraph.Text typography=\"t1\" caption='지난달 대비 +20%' → Spacing size={16} → ListRow contents={<ListRow.Texts type=\"2RowTypeA\" top=\"총수입\" bottom=\"1,880,000원\" />} 형태로 총수입/경비/근무시간/실질시급 4행 → Spacing size={16} → Paragraph.Text typography=\"t5\" '플랫폼별 비중' → MiniBar → Spacing size={16} → ListRow(최다 수입일: '8월 15일 · 210,000원') → Spacing size={24} → Button display=\"block\" size=\"large\" '공유 카드 만들기'(탭 시 generateHapticFeedback({type:'success'})). 간격은 Spacing만, ListRow padding prop 금지. 색상 var(--tds-color-*)만."
+  },
+  {
+    "id": "0018",
+    "title": "/share 공유 카드 화면",
+    "epic": "Epic 4. 코어 UI 페이지",
+    "task": {
+      "description": "선택한 월의 수입 요약을 카드 형태로 렌더하는 화면을 만든다. 순수입, 전월 대비 증감, 근무시간, 실질시급, 대표 플랫폼을 카드에 표시하고 금액 숨김 Switch로 민감 정보를 마스킹할 수 있게 한다. 외부 SNS 링크·앱 설치 유도 문구는 일절 포함하지 않는다.",
+      "acceptance_criteria": [
+        "location.state가 { month }이면 해당 월 데이터로 카드가 렌더되고 state가 null이면 현재 월로 폴백해 크래시하지 않는다",
+        "'금액 숨기기' Switch를 켜면 카드 내 모든 금액이 '••••원'으로 마스킹되고 끄면 원래 값으로 복원된다",
+        "카드에 순수입·전월 대비 증감률·근무시간·실질시급·대표 플랫폼 5개 지표가 표시되고 근무시간 0이면 시급이 '—'",
+        "화면 어디에도 window.open / location.href / '설치' / '다운로드' 문구가 존재하지 않는다(grep 0건)",
+        "해당 월 기록이 0건이면 EmptyState(title='공유할 기록이 없어요')가 렌더되고 카드는 렌더되지 않는다"
+      ]
+    },
+    "covers": [
+      "F8-AC1",
+      "F8-AC2",
+      "AC-G1",
+      "AC-G2"
+    ],
+    "files": [
+      "src/pages/Share.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "grep -rn \"window.open\\|location.href\" src/pages/Share.tsx 결과 0건"
+    ],
+    "depends_on": [
+      "0007",
+      "0009"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "ScreenScaffold + Top title='공유 카드' → Spacing size={16} → 카드 div(borderRadius 16, backgroundColor 'var(--tds-color-grey50)', display flex column) 내부: Paragraph.Text typography=\"st13\" color=\"secondary\" '2026년 8월' → Paragraph.Text typography=\"t1\" '1,650,000원' → Paragraph.Text typography=\"st13\" color=\"secondary\" '지난달 대비 +20%' → Spacing size={12} → 지표 행 3개(근무시간/실질시급/대표 플랫폼, Paragraph.Text t6 + st13) → Spacing size={16} → ListRow right={<Switch checked={masked} />} contents={<ListRow.Texts type=\"2RowTypeA\" top=\"금액 숨기기\" bottom=\"금액을 ••••로 가려요\" />} → Spacing size={16} → Button display=\"block\" size=\"large\" '이미지로 저장'(캡처는 로컬 처리, 외부 링크 금지). States — Empty: EmptyState title='공유할 기록이 없어요' action=Button '수입 기록하기'. Switch 탭 시 generateHapticFeedback({type:'tickWeak'}). 색상 var(--tds-color-*)만, 이모지·외부 링크 금지."
+  },
+  {
+    "id": "0019",
+    "title": "라우팅 배선 + FloatingTabBar + 전역 Provider",
+    "epic": "4",
+    "task": {
+      "description": "src/App.tsx에서 BrowserRouter/Routes로 7개 경로를 연결하고 FloatingTabBar를 배치한다. 광고/결제 SDK 전역 Provider 배선도 이 패킷이 함께 담당한다. 존재하지 않는 경로 진입 시 홈으로 리다이렉트하고, 각 페이지의 location.state가 null/불일치일 때도 크래시하지 않도록 방어한다. main.tsx는 수정하지 않는다.",
+      "acceptance_criteria": [
+        "'/', '/entry', '/platforms', '/wage', '/report', '/share', '/settings' 7개 Route가 모두 등록되어 각 화면이 렌더되고 콘솔 에러 0건",
+        "알 수 없는 경로(/foo) 진입 시 '/'로 리다이렉트된다",
+        "FloatingTabBar가 홈/시급/리포트/설정 4탭으로 렌더되고 현재 경로 탭만 컬러 틴트 활성 상태이며 각 탭 터치 타깃이 44px 이상",
+        "/share와 /report에 location.state 없이 직접 진입해도 현재 월로 폴백하며 화면이 정상 렌더된다",
+        "src/main.tsx가 diff에 포함되지 않고 App.tsx를 수정하는 패킷은 이 패킷 하나뿐이다"
+      ]
+    },
+    "covers": [
+      "AC-G3",
+      "F8-AC3"
+    ],
+    "files": [
+      "src/App.tsx",
+      "src/components/FloatingTabBar.tsx"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "전 화면 순회 시 console.error 0건",
+      "main.tsx 미수정"
+    ],
+    "depends_on": [
+      "0010",
+      "0011",
+      "0012",
+      "0013",
+      "0015",
+      "0016",
+      "0018"
+    ],
+    "db_schema": "",
+    "api_contract": "",
+    "dependencies": [
+      "react-router-dom"
+    ],
+    "ui_requirements": "BrowserRouter + Routes. FloatingTabBar(템플릿 제공, 2~5탭): 홈(/), 시급(/wage), 리포트(/report), 설정(/settings) 4탭. 활성 탭은 컬러 틴트(var(--tds-color-blue500)), 비활성은 var(--tds-color-grey600). position fixed 하단이므로 paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' 필수. 아이콘은 TDS Asset.ContentIcon(이모지 금지). 탭 탭 시 generateHapticFeedback({type:'tickWeak'}). /entry, /platforms, /share는 탭바 비노출(하위 화면). 고정 width 금지."
+  },
+  {
+    "id": "0020",
+    "title": "광고 배치 훅 + 검수 정적 게이트 & UX 폴리시",
+    "epic": "Epic 5. 통합",
+    "task": {
+      "description": "홈·시급 화면 하단 콘텐츠 사이에 넣을 AdSlot 배치 컴포넌트(HomeAdSection)와 온보딩 안내 1회 노출 훅(useOnboardingNotice), 저장 실패/데이터 손상 Toast를 표준화한 useAppToast를 만든다. App.tsx/main.tsx는 건드리지 않는다. 마지막으로 검수 금지 패턴 정적 게이트를 통과시킨다.",
+      "acceptance_criteria": [
+        "AdSection 컴포넌트가 <AdSlot adGroupId={import.meta.env.VITE_TOSS_AD_GROUP_ID} />를 감싸 콘텐츠 사이(리스트 위)에 렌더되고 광고 로드 실패 시 영역이 접혀 레이아웃이 깨지지 않는다",
+        "useOnboardingNotice가 settings.noticeSeenAt이 null일 때만 안내 AlertDialog(왼쪽 버튼 '닫기')를 1회 표시하고 확인 시 ISO 시각을 저장해 재방문 시 표시되지 않는다",
+        "useAppToast가 저장 실패 시 '저장 공간이 부족해요. 오래된 기록을 삭제해주세요', 손상 데이터 시 '일부 저장 데이터를 불러오지 못했어요' 문구를 반환한다",
+        "grep -rn \"window.open\\|location.href\" src/ 0건, grep -rEn \"#[0-9a-fA-F]{3,6}\" src/ 0건, '설치'/'다운로드'/'앱스토어' 문구 0건",
+        "package.json에 stripe/iamport/admob/firebase/gtag/amplitude/sentry 의존성이 0건이고 npm run build 에러 0"
+      ]
+    },
+    "covers": [
+      "AC-G1",
+      "AC-G2",
+      "AC-G4",
+      "AC-G6",
+      "AC-G9",
+      "AC-G10"
+    ],
+    "files": [
+      "src/components/AdSection.tsx",
+      "src/hooks/useOnboardingNotice.ts",
+      "src/hooks/useAppToast.ts"
+    ],
+    "definition_of_done": [
+      "npm run build 에러 0",
+      "src/App.tsx / src/main.tsx가 diff에 포함되지 않음",
+      "모든 정적 금지 패턴 grep 0건"
+    ],
+    "depends_on": [
+      "0007"
+    ],
+    "db_schema": "Settings.noticeSeenAt: string | null → 'gigledger.settings.v1'",
+    "api_contract": "",
+    "dependencies": [],
+    "ui_requirements": "AdSection: Spacing size={16} → <AdSlot adGroupId={import.meta.env.VITE_TOSS_AD_GROUP_ID} /> → Spacing size={16}. 콘텐츠 사이(홈: MiniBar와 최근 기록 리스트 사이, 시급: 랭킹 리스트 하단)에만 배치, 상단 고정/전면 노출 금지. 온보딩 안내: TDS AlertDialog, 제목 '기록은 이 기기에만 저장돼요', 본문 '앱을 삭제하면 기록이 사라져요', 왼쪽 버튼 '닫기' 오른쪽 '확인'. Toast는 TDS Toast position=\"bottom\". 색상 var(--tds-color-*)만, 이모지 금지."
+  }
+]
