@@ -182,7 +182,13 @@ describe("/report 월 네비게이션 + 리워드 광고 게이트", () => {
 
     it("AC-4[P0]: 이미 해금된 월은 재진입 시 광고 없이 본문이 바로 표시된다", async () => {
       seedPlatforms();
-      seedEntries([makeEntry({ id: "e1", date: `${lastMonth}-05`, amount: 500000, expense: 0, minutes: 60 })]);
+      // 단일 기록만 있으면 총수입=최다 수입일 금액이 항상 같은 값이라 getByText가
+      // "여러 요소 일치"로 실패한다 — 두 번째(더 작은) 기록을 더해 총수입/실질시급이
+      // 500,000과 갈라지게 하고, 최다 수입일 행에서만 500,000이 보이게 한다.
+      seedEntries([
+        makeEntry({ id: "e1", date: `${lastMonth}-05`, amount: 500000, expense: 0, minutes: 60 }),
+        makeEntry({ id: "e2", date: `${lastMonth}-10`, amount: 50000, expense: 0, minutes: 30 }),
+      ]);
       seedUnlocks({ [lastMonth]: "2026-01-01T00:00:00.000Z" });
 
       await renderReport({ month: lastMonth });

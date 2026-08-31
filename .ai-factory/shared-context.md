@@ -286,6 +286,7 @@ CRITICAL: Before creating any new function, type, or component, check the list a
 - 0015: /wage 실질 시급 화면 (files: src/pages/Wage.tsx)
 - 0017: /report 본문 지표 컴포넌트 + 공유 이동 (files: src/components/ReportBody.tsx)
 - 0019: 라우팅 배선 + FloatingTabBar + 전역 Provider (files: src/App.tsx, src/components/FloatingTabBar.tsx)
+- 0013: / 홈 — 요약 섹션 (Tab/Hero/스트릭/목표/차트) (files: src/pages/Home.tsx)
 
 ## Available exports from existing files
 // src/App.tsx

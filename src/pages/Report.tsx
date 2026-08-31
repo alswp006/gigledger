@@ -9,10 +9,9 @@ import { AdSlot } from "@/components/AdSlot";
 import { TossRewardAd } from "@/components/TossRewardAd";
 import { useLedger } from "@/hooks/useLedger";
 import { addMonthKey, toDateKey, toMonthKey } from "@/lib/date";
+import { REPORT_MONTH_RANGE } from "@/lib/constants";
 
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
-/** 열람 가능 범위 — 이번 달부터 11개월 전까지 총 12개월. */
-const MONTH_RANGE = 11;
 
 /** location.state는 직접 URL 진입·새로고침에서 null이다. 형식이 어긋나도 현재 달로 폴백한다. */
 function readMonth(state: unknown): string {
@@ -34,7 +33,7 @@ export default function Report() {
   const thisMonth = toMonthKey(toDateKey(new Date()));
   const [month, setMonth] = useState(() => readMonth(location.state));
 
-  const oldestMonth = addMonthKey(thisMonth, -MONTH_RANGE);
+  const oldestMonth = addMonthKey(thisMonth, -REPORT_MONTH_RANGE);
   const atNewest = month >= thisMonth;
   const atOldest = month <= oldestMonth;
 

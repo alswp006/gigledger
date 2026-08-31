@@ -317,16 +317,34 @@ export function mockAppsInToss() {
 
 // ── Toss Reward Ad Component ──
 // TossRewardAd is a project-local component that wraps content behind ad viewing.
-// In tests, render the children directly (ad always "watched").
+// In tests, render the children directly (ad always "watched") — but ONLY when
+// mockTossRewardAd() was actually called. vi.mock() calls are hoisted to the top
+// of THIS file regardless of nesting inside a function (Vitest hoists any literal
+// `vi.mock(...)` call it finds, ignoring enclosing scope), so this factory must be
+// registered unconditionally and branch at *render* time via a vi.hoisted() flag —
+// otherwise every test file that imports anything from mocks.ts silently mocks
+// TossRewardAd even when it never calls mockTossRewardAd() (confirmed via
+// debug.test.ts: importing just mockRouter still swapped in the @toss/tds-mobile
+// mock Button). Packet 0016 relies on the REAL component being used when it isn't
+// opted in.
+const tossRewardAdMockState = vi.hoisted(() => ({ enabled: false }));
+
+vi.mock("@/components/TossRewardAd", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../components/TossRewardAd")>();
+  const RealTossRewardAd = actual.TossRewardAd;
+  function TossRewardAd(props: any) {
+    if (!tossRewardAdMockState.enabled) {
+      return React.createElement(RealTossRewardAd, props);
+    }
+    const { children, onRewarded } = props;
+    if (onRewarded) setTimeout(onRewarded, 0);
+    return children;
+  }
+  return { ...actual, TossRewardAd, default: TossRewardAd };
+});
+
 export function mockTossRewardAd() {
-  vi.mock("@/components/TossRewardAd", () => ({
-    TossRewardAd: ({ children, onReward }: any) => {
-      // Auto-trigger onReward in tests to unlock content
-      if (onReward) setTimeout(onReward, 0);
-      return children;
-    },
-    default: ({ children }: any) => children,
-  }));
+  tossRewardAdMockState.enabled = true;
 }
 
 // ── react-router-dom ──
