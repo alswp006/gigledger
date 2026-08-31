@@ -205,6 +205,7 @@ export const RouteState = {} as const;
     storage.ts
     types.ts
     utils.ts
+    validate.ts
   main.tsx
   pages/
     Home.tsx
@@ -224,6 +225,7 @@ export const RouteState = {} as const;
 - storage.ts: export function getItem<T>(key: string): T | null; export function setItem<T>(key: string, value: T): void; export function removeItem(key: string): void
 - types.ts: export type PlatformCategory = "delivery" | "driving" | "logistics" | "freelance" | "etc"; export type ColorToken = "blue" | "green" | "orange" | "purple" | "red" | "grey"; export interface Platform; export interface IncomeEntry; export interface Settings; export type ReportUnlockMap = Record<string, string>; export interface PeriodSummary; export interface StreakResult
 - utils.ts: export function cn(...classes: (string | boolean | undefined | null)[]): string; export function formatNumber(n: number): string; export function formatCurrency(n: number, currency = 'KRW'): string
+- validate.ts: export type ValidationResult = |; export function validateEntry(input: EntryInput): ValidationResult; export function validatePlatformName( name: string, existingPlatforms: Array<; export function isValidEntry(data: Partial<Entry>):; export function isValidPlatform(data: Partial<Platform>):; export function validateGoal(goal: number): ValidationResult
 
 ### Components (src/components/)
 - AdSlot.tsx: AdSlot
@@ -243,88 +245,11 @@ export const RouteState = {} as const;
 
 ### Module Dependencies (import graph)
   lib/constants.ts → imports: lib/types
+  lib/validate.ts → imports: lib/date, lib/contract
 CRITICAL: Before creating any new function, type, or component, check the list above. If something similar exists, import and use it.
 
 ## Already Implemented (do NOT duplicate or overwrite)
 - 0001: 엔티티 타입 + RouteState 계약 정의 (files: src/lib/types.ts)
 - 0002: 상수 모듈 (STORAGE_KEYS / 한계값 / 색상 토큰) (files: src/lib/constants.ts)
 - 0003: 포맷/날짜/ID 유틸 (순수 함수) (files: src/lib/format.ts, src/lib/date.ts, src/lib/id.ts)
-
-## Available exports from existing files
-// src/App.tsx
-export default function App() {
-
-// src/components/AdSlot.tsx
-export function AdSlot({ adGroupId, className, variant, theme }: AdSlotProps) {
-
-// src/components/Amount.tsx
-export function Amount({
-
-// src/components/BottomCTA.tsx
-export function SubmitFooter({
-export function ButtonStack({
-
-// src/components/Card.tsx
-export function Card({
-
-// src/components/CountUp.tsx
-export function CountUp({
-
-// src/components/FloatingTabBar.tsx
-export type TabItem = {
-export function FloatingTabBar({ items }: { items: TabItem[] }) {
-
-// src/components/MiniBar.tsx
-export function MiniBar({
-
-// src/components/PageShell.tsx
-export function PageShell({ children, style }: { children: ReactNode; style?: CSSProperties }) {
-
-// src/components/ScreenScaffold.tsx
-export function ScreenScaffold({
-
-// src/components/Sparkline.tsx
-export function Sparkline({
-
-// src/components/StateView.tsx
-export function EmptyState({
-export function LoadingState({
-
-// src/components/SummaryHero.tsx
-export function SummaryHero({
-
-// src/components/TossPurchase.tsx
-export interface TossPurchaseResult {
-export function TossPurchase({
-
-// src/components/TossRewardAd.tsx
-export function TossRewardAd({
-
-// src/lib/constants.ts
-export const STORAGE_KEYS = {
-export const MIN_WAGE_2026 = 10320;
-export const MAX_ENTRIES = 5000;
-export const MAX_PLATFORMS = 20;
-export const MAX_AMOUNT = 10000000;
-export const MAX_MINUTES = 1440;
-export const MAX_MEMO = 50;
-export const MAX_PLATFORM_NAME = 12;
-export const GOAL_MIN = 10000;
-export const GOAL_MAX = 50000000;
-
-// src/lib/contract.ts
-export type Entry = { id: string; platformId: string; amountKrw: number; date: string; hoursWorked?: number; memo?: string; createdAt: string };
-export type Platform = { id: string; name: string; color: string; isActive: boolean; hourlyRate?: number; createdAt: string };
-export type Settings = { theme: "light" | "dark"; dailyGoalKrw: number; currencyDisplay: "KRW" | "USD"; adConsent: boolean; version: number };
-export type Ro
-
-## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
-
-Available topics: deploy(1), general(9), testing(1)
-
-Key lessons (verify against actual code before applying):
-- [general] 외부에서 들어온 모든 값(라우터 state, 로컬 저장소, 부분 입력 폼)은 사용 직전에 배열·객체 기본값으로 정규화하고, 테이블/맵 조회 결과는 존재 확인 후에만 하위 속성이나 length에 접근하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 의존 그래프 최하층의 타입·계약 파일은 런타임 코드 0줄의 순수 선언으로 가장 먼저 단독 타입체크를 통과시키고, 파일 생성은 셸 명령이 아닌 허용된 편집 도구로만 하게 강제하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 영속 저장소에서 읽은 값은 항상 스키마 기본값으로 정규화해 배열·객체 타입을 보장한 뒤 반환하고, 화면은 빈/손상/부분 데이터에서도 렌더되도록 방어하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 정책·기능 제거형 리팩터링은 화면과 도메인 로직 레이어에서만 수행하고, package.json의 플랫폼 필수 의존성(디자인 시스템·플랫폼 SDK·프레임워크 코어)은 어떤 경우에도 삭제하지 말 것 — 필수 패키지 화이트리스트를 빌드 전 가드로 검증하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 공용 기반 모듈(상수·저장소·계산 유틸)이 실제로 머지되기 전에는 이를 import하는 화면·훅 패킷을 머지하지 말고, 모든 머지 게이트에 타입체크와 프로덕션 빌드 통과(미해결 import 0건)를 필수로 걸어라. (60% · 타 앱 1회 — 맹신 금지)
+- 0004: 검증 모듈 validate.ts (고정 에러 문구) (files: src/lib/validate.ts)
