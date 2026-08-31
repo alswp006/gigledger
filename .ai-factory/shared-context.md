@@ -197,6 +197,7 @@ export const RouteState = {} as const;
     TossRewardAd.tsx
   hooks/
   lib/
+    calc.ts
     constants.ts
     contract.ts
     date.ts
@@ -217,6 +218,7 @@ export const RouteState = {} as const;
   vite-env.d.ts
 
 ### Exports (src/lib/)
+- calc.ts: export function calcHourlyWage( entries: Array<Pick<IncomeEntry, "amount" | "expense" | "minutes">> ): number | null; export function calcStreak( entries: Array<Pick<IncomeEntry, "date">>, referenceDate: string ): StreakResult; export function calcPeriodSummary( entries: Array<Pick<IncomeEntry, "amount" | "expense" | "minutes">> ): PeriodSummary; export function calcGoalRate(current: number, monthlyGoal: number): number | null; export function calcPlatformWages(entries: IncomeEntry[], platforms: Platform[]): WageRow[]; export function calcTrend14( entries: Array<Pick<IncomeEntry, "date" | "amount" | "expense">>, referenceDate: string ): ; export function calcMonthlyReport( entries: IncomeEntry[], platforms: Platform[], month: string ): MonthlyReport; export function sumAmountByDate(entries: Entry[], dateStr: string): number
 - constants.ts: export const STORAGE_KEYS =; export const MIN_WAGE_2026 = 10320; export const MAX_ENTRIES = 5000; export const MAX_PLATFORMS = 20; export const MAX_AMOUNT = 10000000; export const MAX_MINUTES = 1440; export const MAX_MEMO = 50; export const MAX_PLATFORM_NAME = 12
 - contract.ts: export type Entry =; export type Platform =; export type Settings =; export type RouteState =; export type LedgerState =; export type STORAGE_KEYS =; export type COLOR_TOKENS =; export type LIMITS =
 - date.ts: export function toDateKey(date: Date): string; export function toMonthKey(dateStr: string): string; export function startOfWeek(dateStr: string): string; export function addMonthKey(monthStr: string, delta: number): string; export function formatDate(date: string, fmt: "short" | "long" | "time" = "short"): string
@@ -244,6 +246,7 @@ export const RouteState = {} as const;
 - TossRewardAd.tsx: TossRewardAd
 
 ### Module Dependencies (import graph)
+  lib/calc.ts → imports: lib/types, lib/contract, lib/date
   lib/constants.ts → imports: lib/types
   lib/storage.ts → imports: lib/types, lib/constants, lib/id
   lib/validate.ts → imports: lib/date, lib/contract
@@ -255,82 +258,4 @@ CRITICAL: Before creating any new function, type, or component, check the list a
 - 0003: 포맷/날짜/ID 유틸 (순수 함수) (files: src/lib/format.ts, src/lib/date.ts, src/lib/id.ts)
 - 0004: 검증 모듈 validate.ts (고정 에러 문구) (files: src/lib/validate.ts)
 - 0005: localStorage 리포지토리 storage.ts (files: src/lib/storage.ts)
-
-## Available exports from existing files
-// src/App.tsx
-export default function App() {
-
-// src/components/AdSlot.tsx
-export function AdSlot({ adGroupId, className, variant, theme }: AdSlotProps) {
-
-// src/components/Amount.tsx
-export function Amount({
-
-// src/components/BottomCTA.tsx
-export function SubmitFooter({
-export function ButtonStack({
-
-// src/components/Card.tsx
-export function Card({
-
-// src/components/CountUp.tsx
-export function CountUp({
-
-// src/components/FloatingTabBar.tsx
-export type TabItem = {
-export function FloatingTabBar({ items }: { items: TabItem[] }) {
-
-// src/components/MiniBar.tsx
-export function MiniBar({
-
-// src/components/PageShell.tsx
-export function PageShell({ children, style }: { children: ReactNode; style?: CSSProperties }) {
-
-// src/components/ScreenScaffold.tsx
-export function ScreenScaffold({
-
-// src/components/Sparkline.tsx
-export function Sparkline({
-
-// src/components/StateView.tsx
-export function EmptyState({
-export function LoadingState({
-
-// src/components/SummaryHero.tsx
-export function SummaryHero({
-
-// src/components/TossPurchase.tsx
-export interface TossPurchaseResult {
-export function TossPurchase({
-
-// src/components/TossRewardAd.tsx
-export function TossRewardAd({
-
-// src/lib/constants.ts
-export const STORAGE_KEYS = {
-export const MIN_WAGE_2026 = 10320;
-export const MAX_ENTRIES = 5000;
-export const MAX_PLATFORMS = 20;
-export const MAX_AMOUNT = 10000000;
-export const MAX_MINUTES = 1440;
-export const MAX_MEMO = 50;
-export const MAX_PLATFORM_NAME = 12;
-export const GOAL_MIN = 10000;
-export const GOAL_MAX = 50000000;
-
-// src/lib/contract.ts
-export type Entry = { id: string; platformId: string; amountKrw: number; date: string; hoursWorked?: number; memo?: string; createdAt: string };
-export type Platform = { id: string; name: string; color: string; isActive: boolean; hourlyRate?: number; createdAt: string };
-export type Settings = { theme: "light" | "dark"; dailyGoalKrw: number; currencyDisplay: "KRW" | "USD"; adConsent: boolean; version: number };
-export type Ro
-
-## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
-
-Available topics: deploy(1), general(9), testing(1)
-
-Key lessons (verify against actual code before applying):
-- [general] 외부에서 들어온 모든 값(라우터 state, 로컬 저장소, 부분 입력 폼)은 사용 직전에 배열·객체 기본값으로 정규화하고, 테이블/맵 조회 결과는 존재 확인 후에만 하위 속성이나 length에 접근하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 의존 그래프 최하층의 타입·계약 파일은 런타임 코드 0줄의 순수 선언으로 가장 먼저 단독 타입체크를 통과시키고, 파일 생성은 셸 명령이 아닌 허용된 편집 도구로만 하게 강제하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 영속 저장소에서 읽은 값은 항상 스키마 기본값으로 정규화해 배열·객체 타입을 보장한 뒤 반환하고, 화면은 빈/손상/부분 데이터에서도 렌더되도록 방어하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 정책·기능 제거형 리팩터링은 화면과 도메인 로직 레이어에서만 수행하고, package.json의 플랫폼 필수 의존성(디자인 시스템·플랫폼 SDK·프레임워크 코어)은 어떤 경우에도 삭제하지 말 것 — 필수 패키지 화이트리스트를 빌드 전 가드로 검증하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 공용 기반 모듈(상수·저장소·계산 유틸)이 실제로 머지되기 전에는 이를 import하는 화면·훅 패킷을 머지하지 말고, 모든 머지 게이트에 타입체크와 프로덕션 빌드 통과(미해결 import 0건)를 필수로 걸어라. (60% · 타 앱 1회 — 맹신 금지)
+- 0006: 계산 순수 함수 calc.ts (files: src/lib/calc.ts)
