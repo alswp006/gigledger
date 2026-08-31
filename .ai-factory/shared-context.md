@@ -74,8 +74,106 @@ export type useLedgerFn = () => { state: LedgerState; add: (entry: Entry) => voi
 
 ## Shared Types Contract (IMPORT these, do NOT redefine)
 ```typescript
-// Domain types — add your app-specific types here
-export {};
+// 엔티티 타입 + RouteState 계약 정의 (패킷 0001)
+// 런타임 코드 없음 — export type/interface 선언만.
+
+export type PlatformCategory = "delivery" | "driving" | "logistics" | "freelance" | "etc";
+
+export type ColorToken = "blue" | "green" | "orange" | "purple" | "red" | "grey";
+
+export interface Platform {
+  id: string;
+  name: string;
+  category: PlatformCategory;
+  colorToken: ColorToken;
+  archived: boolean;
+  createdAt: string;
+}
+
+export interface IncomeEntry {
+  id: string;
+  platformId: string;
+  date: string;
+  amount: number;
+  expense: number;
+  minutes: number;
+  memo: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Settings {
+  monthlyGoal: number;
+  bestStreak: number;
+  noticeSeenAt: string | null;
+}
+
+export type ReportUnlockMap = Record<string, string>;
+
+// 기간 합산 결과 (calcPeriodSummary)
+export interface PeriodSummary {
+  totalAmount: number;
+  totalExpense: number;
+  netAmount: number;
+  totalMinutes: number;
+}
+
+// 연속 기록 스트릭 결과 (calcStreak)
+export interface StreakResult {
+  current: number;
+  lastDate: string | null;
+}
+
+// 플랫폼별 실질 시급 행 (/wage)
+export interface WageRow {
+  platformId: string;
+  platformName: string;
+  colorToken: ColorToken;
+  netAmount: number;
+  totalMinutes: number;
+  entryCount: number;
+  hourlyWage: number | null;
+}
+
+// 월간 소득 리포트 (/report)
+export interface MonthlyReport {
+  month: string;
+  totalAmount: number;
+  totalExpense: number;
+  netAmount: number;
+  averageHourlyWage: number | null;
+  platformRanking: WageRow[];
+  previousMonthDeltaPercent: number | null;
+  bestDay: { date: string; amount: number } | null;
+}
+
+export type SaveResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+export type RouteState = {
+  "/": null;
+  "/entry": { date: string } | { entryId: string } | null;
+  "/platforms": null;
+  "/wage": null;
+  "/report": { month: string } | null;
+  "/share": { month: string } | null;
+  "/settings": null;
+};
+
+// 타입은 TS 컴파일 시 소거되어 모듈 런타임 객체에 키로 남지 않는다(export interface/type 자체는
+// value space가 아니므로). 아래는 그 사실과 무관하게 "타입이 export됐는지"를 런타임에서도
+// 확인하려는 소비 코드(및 packet-0001.test.ts)를 위한 존재 마커일 뿐, 어떤 로직도 갖지 않는다.
+export const PlatformCategory = {} as const;
+export const ColorToken = {} as const;
+export const Platform = {} as const;
+export const IncomeEntry = {} as const;
+export const Settings = {} as const;
+export const ReportUnlockMap = {} as const;
+export const PeriodSummary = {} as const;
+export const StreakResult = {} as const;
+export const WageRow = {} as const;
+export const MonthlyReport = {} as const;
+export const SaveResult = {} as const;
+export const RouteState = {} as const;
 
 ```
 
@@ -99,6 +197,7 @@ export {};
     TossRewardAd.tsx
   hooks/
   lib/
+    contract.ts
     storage.ts
     types.ts
     utils.ts
@@ -113,7 +212,9 @@ export {};
   vite-env.d.ts
 
 ### Exports (src/lib/)
+- contract.ts: export type Entry =; export type Platform =; export type Settings =; export type RouteState =; export type LedgerState =; export type STORAGE_KEYS =; export type COLOR_TOKENS =; export type LIMITS =
 - storage.ts: export function getItem<T>(key: string): T | null; export function setItem<T>(key: string, value: T): void; export function removeItem(key: string): void
+- types.ts: export type PlatformCategory = "delivery" | "driving" | "logistics" | "freelance" | "etc"; export type ColorToken = "blue" | "green" | "orange" | "purple" | "red" | "grey"; export interface Platform; export interface IncomeEntry; export interface Settings; export type ReportUnlockMap = Record<string, string>; export interface PeriodSummary; export interface StreakResult
 - utils.ts: export function cn(...classes: (string | boolean | undefined | null)[]): string; export function formatNumber(n: number): string; export function formatCurrency(n: number, currency = 'KRW'): string
 
 ### Components (src/components/)
@@ -133,72 +234,5 @@ export {};
 - TossRewardAd.tsx: TossRewardAd
 CRITICAL: Before creating any new function, type, or component, check the list above. If something similar exists, import and use it.
 
-## Available exports from existing files
-// src/App.tsx
-export default function App() {
-
-// src/components/AdSlot.tsx
-export function AdSlot({ adGroupId, className, variant, theme }: AdSlotProps) {
-
-// src/components/Amount.tsx
-export function Amount({
-
-// src/components/BottomCTA.tsx
-export function SubmitFooter({
-export function ButtonStack({
-
-// src/components/Card.tsx
-export function Card({
-
-// src/components/CountUp.tsx
-export function CountUp({
-
-// src/components/FloatingTabBar.tsx
-export type TabItem = {
-export function FloatingTabBar({ items }: { items: TabItem[] }) {
-
-// src/components/MiniBar.tsx
-export function MiniBar({
-
-// src/components/PageShell.tsx
-export function PageShell({ children, style }: { children: ReactNode; style?: CSSProperties }) {
-
-// src/components/ScreenScaffold.tsx
-export function ScreenScaffold({
-
-// src/components/Sparkline.tsx
-export function Sparkline({
-
-// src/components/StateView.tsx
-export function EmptyState({
-export function LoadingState({
-
-// src/components/SummaryHero.tsx
-export function SummaryHero({
-
-// src/components/TossPurchase.tsx
-export interface TossPurchaseResult {
-export function TossPurchase({
-
-// src/components/TossRewardAd.tsx
-export function TossRewardAd({
-
-// src/lib/contract.ts
-export type Entry = { id: string; platformId: string; amountKrw: number; date: string; hoursWorked?: number; memo?: string; createdAt: string };
-export type Platform = { id: string; name: string; color: string; isActive: boolean; hourlyRate?: number; createdAt: string };
-export type Settings = { theme: "light" | "dark"; dailyGoalKrw: number; currencyDisplay: "KRW" | "USD"; adConsent: boolean; version: number };
-export type RouteState = { route: "home" | "entry" | "platforms" | "wage" | "report" | "settings" | "share"; entryId?: string; month?: string };
-export type LedgerState = { entries: Entry[]; platforms: Platform[]; settings: Settings; isLoading: boolean };
-export type STORAGE_KEYS = { entries: "app:entries"; platforms: "app:platforms"; settings: "app:settings" };
-expor
-
-## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
-
-Available topics: deploy(1), general(9), testing(1)
-
-Key lessons (verify against actual code before applying):
-- [testing] 공유 상태·저장소·계산 엔진 같은 기반 계층은 화면 패킷보다 먼저 완전한 export 계약으로 머지하고, 모든 화면은 에러 경계와 state-없는 진입 폴백을 갖춰 한 화면의 예외가 전체 라우트 스모크를 무너뜨리지 않게 한다. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 외부에서 들어온 모든 값(라우터 state, 로컬 저장소, 부분 입력 폼)은 사용 직전에 배열·객체 기본값으로 정규화하고, 테이블/맵 조회 결과는 존재 확인 후에만 하위 속성이나 length에 접근하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 의존 그래프 최하층의 타입·계약 파일은 런타임 코드 0줄의 순수 선언으로 가장 먼저 단독 타입체크를 통과시키고, 파일 생성은 셸 명령이 아닌 허용된 편집 도구로만 하게 강제하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 영속 저장소에서 읽은 값은 항상 스키마 기본값으로 정규화해 배열·객체 타입을 보장한 뒤 반환하고, 화면은 빈/손상/부분 데이터에서도 렌더되도록 방어하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 정책·기능 제거형 리팩터링은 화면과 도메인 로직 레이어에서만 수행하고, package.json의 플랫폼 필수 의존성(디자인 시스템·플랫폼 SDK·프레임워크 코어)은 어떤 경우에도 삭제하지 말 것 — 필수 패키지 화이트리스트를 빌드 전 가드로 검증하라. (60% · 타 앱 1회 — 맹신 금지)
+## Already Implemented (do NOT duplicate or overwrite)
+- 0001: 엔티티 타입 + RouteState 계약 정의 (files: src/lib/types.ts)
