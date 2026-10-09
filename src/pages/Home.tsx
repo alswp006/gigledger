@@ -113,7 +113,7 @@ export default function Home() {
 
   return (
     <ScreenScaffold
-      top={<Top title={<Top.TitleParagraph>GigLedger</Top.TitleParagraph>} />}
+      top={<Top title={<Top.TitleParagraph>긱렛저</Top.TitleParagraph>} />}
       bottom={<FloatingTabBar />}
     >
       {loading ? (

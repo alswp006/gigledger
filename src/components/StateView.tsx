@@ -60,6 +60,9 @@ export function EmptyState({
         flexDirection: "column",
         alignItems: "center",
         textAlign: "center",
+        justifyContent: "center",
+        minHeight: "55dvh",
+        wordBreak: "keep-all",
         padding: "48px 24px",
       }}
     >

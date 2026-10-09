@@ -111,7 +111,7 @@ export default function Share() {
   return (
     <ScreenScaffold top={<Top title={<Top.TitleParagraph>공유 카드</Top.TitleParagraph>} />}>
       <Card testId="share-card">
-        <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
+        <Paragraph.Text typography="t7" color="var(--adaptiveGrey600)">
           {monthLabel(month)}
         </Paragraph.Text>
         <Spacing size={4} />
@@ -119,7 +119,7 @@ export default function Share() {
         <Spacing size={8} />
         <Paragraph.Text typography="t6">실질 시급 {wageText}</Paragraph.Text>
         <Spacing size={4} />
-        <Paragraph.Text typography="t6">{streak.current}일 연속 기록</Paragraph.Text>
+        <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">{streak.current}일 연속 기록</Paragraph.Text>
         {barItems.length > 0 ? (
           <>
             <Spacing size={16} />

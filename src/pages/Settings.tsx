@@ -73,7 +73,7 @@ export default function Settings() {
     <ScreenScaffold top={<Top title={<Top.TitleParagraph>앱 설정</Top.TitleParagraph>} />} bottom={<FloatingTabBar />}>
       <Spacing size={16} />
       <Paragraph.Text typography="t5">월 목표</Paragraph.Text>
-      <Spacing size={8} />
+      <Spacing size={12} />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -118,7 +118,7 @@ export default function Settings() {
       <Spacing size={24} />
       <ListRow
         onClick={() => setConfirmOpen(true)}
-        contents={<Paragraph.Text typography="t6">기록 전체 삭제</Paragraph.Text>}
+        contents={<Paragraph.Text typography="t6" color="var(--adaptiveRed500)">기록 전체 삭제</Paragraph.Text>}
       />
 
       <AlertDialog

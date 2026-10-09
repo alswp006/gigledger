@@ -36,10 +36,10 @@ describe("라우팅 배선 + FloatingTabBar + 전역 Provider", () => {
       errorSpy.mockRestore();
     });
 
-    it("AC-1: '/' 경로는 홈 화면(GigLedger 타이틀)을 렌더한다", async () => {
+    it("AC-1: '/' 경로는 홈 화면(긱렛저 타이틀)을 렌더한다", async () => {
       const { default: App } = await import("@/App");
       renderWithRouter(React.createElement(App), { initialEntries: ["/"] });
-      expect(screen.getAllByText("GigLedger").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("긱렛저").length).toBeGreaterThan(0);
     });
 
     it("AC-1: '/wage'와 '/settings' 경로는 각각 고유 타이틀을 렌더한다", async () => {
@@ -58,13 +58,13 @@ describe("라우팅 배선 + FloatingTabBar + 전역 Provider", () => {
     it("AC-2: '/foo' 진입 시 '/'로 리다이렉트되어 홈 화면이 렌더된다", async () => {
       const { default: App } = await import("@/App");
       renderWithRouter(React.createElement(App), { initialEntries: ["/foo"] });
-      expect(screen.getAllByText("GigLedger").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("긱렛저").length).toBeGreaterThan(0);
     });
 
     it("AC-2: 존재하지 않는 중첩 경로('/foo/bar')도 홈으로 리다이렉트된다", async () => {
       const { default: App } = await import("@/App");
       renderWithRouter(React.createElement(App), { initialEntries: ["/foo/bar"] });
-      expect(screen.getAllByText("GigLedger").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("긱렛저").length).toBeGreaterThan(0);
     });
   });
 
