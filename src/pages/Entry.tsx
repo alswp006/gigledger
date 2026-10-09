@@ -72,23 +72,6 @@ function SelectChip({
   );
 }
 
-/**
- * 필드 위 상시 라벨.
- * TDS TextField의 `label`은 플로팅이라 값이 비고 포커스가 없으면 위로 떠 **사라진다**
- * (실측: 빈 폼에서 수입/경비/시간이 전부 placeholder만 남아 무슨 칸인지 알 수 없었다).
- * 그래서 라벨은 바깥에 상시 노출하고, TextField에는 aria-label로 접근성 이름만 준다.
- */
-function FieldLabel({ children }: { children: ReactNode }) {
-  return (
-    <>
-      <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
-        {children}
-      </Paragraph.Text>
-      <Spacing size={8} />
-    </>
-  );
-}
-
 /** 숫자 필드는 문자열로 들고 있다가 제출 시점에만 숫자로 바꾼다(입력 중 "0" 강제 방지). */
 function toNumber(raw: string): number {
   const parsed = parseKrwAmount(raw);
@@ -244,11 +227,11 @@ export default function Entry() {
           handleSubmit();
         }}
       >
-        <FieldLabel>일자</FieldLabel>
         <TextField
           variant="box"
           type="date"
-          aria-label="일자"
+          label="일자"
+          labelOption="sustain"
           placeholder="2026-08-31"
           value={draft.date}
           max={toDateKey(new Date())}
@@ -257,7 +240,7 @@ export default function Entry() {
 
         <Spacing size={20} />
 
-        <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
+        <Paragraph.Text typography="st13" color="var(--adaptiveGrey700)">
           어디서 번 수입인가요
         </Paragraph.Text>
         <Spacing size={8} />
@@ -284,10 +267,10 @@ export default function Entry() {
 
         <Spacing size={20} />
 
-        <FieldLabel>수입</FieldLabel>
         <TextField
           variant="box"
-          aria-label="수입"
+          label="수입"
+          labelOption="sustain"
           placeholder="128,000"
           suffix="원"
           inputMode="numeric"
@@ -300,10 +283,10 @@ export default function Entry() {
 
         <Spacing size={16} />
 
-        <FieldLabel>경비</FieldLabel>
         <TextField
           variant="box"
-          aria-label="경비"
+          label="경비"
+          labelOption="sustain"
           placeholder="18,000"
           suffix="원"
           inputMode="numeric"
@@ -316,10 +299,10 @@ export default function Entry() {
 
         <Spacing size={16} />
 
-        <FieldLabel>일한 시간</FieldLabel>
         <TextField
           variant="box"
-          aria-label="일한 시간"
+          label="일한 시간"
+          labelOption="sustain"
           placeholder="330"
           suffix="분"
           inputMode="numeric"
@@ -334,10 +317,10 @@ export default function Entry() {
 
         <Spacing size={16} />
 
-        <FieldLabel>메모</FieldLabel>
         <TextField
           variant="box"
-          aria-label="메모"
+          label="메모"
+          labelOption="sustain"
           placeholder="피크타임"
           enterKeyHint="done"
           maxLength={MAX_MEMO}

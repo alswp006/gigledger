@@ -84,6 +84,7 @@ export default function Settings() {
           data-testid="goal-input"
           variant="box"
           label="월 목표 금액"
+          labelOption="sustain"
           placeholder="예: 3,000,000원"
           inputMode="numeric"
           pattern="[0-9]*"

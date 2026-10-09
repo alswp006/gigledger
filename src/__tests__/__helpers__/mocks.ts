@@ -148,14 +148,17 @@ export function mockTds() {
       React.createElement("button", { onClick }, children),
 
     TextField: React.forwardRef(
-      ({ label, help, hasError, variant, ...props }: any, ref: any) =>
-        React.createElement(
+      ({ label, labelOption, help, hasError, variant, ...props }: any, ref: any) => {
+        // 벤더 TextField는 label을 input에 연결한다 — 목도 같은 모양(label이 있을 때만 id/htmlFor).
+        const id = label ? (props.id ?? `tf-${String(label)}`) : props.id;
+        return React.createElement(
           "div",
           null,
-          React.createElement("label", null, label),
-          React.createElement("input", { ref, "data-variant": variant, ...props }),
+          label && React.createElement("label", { htmlFor: id }, label),
+          React.createElement("input", { ref, id, "data-variant": variant, ...props }),
           hasError && help && React.createElement("span", { role: "alert" }, help),
-        ),
+        );
+      },
     ),
 
     // title은 그대로 렌더한다 — 여기서 <h1>로 한 번 더 감싸면 Top.TitleParagraph의 <h1>과

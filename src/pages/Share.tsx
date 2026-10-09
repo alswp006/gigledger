@@ -55,7 +55,7 @@ export default function Share() {
     colorToken: row.colorToken,
   }));
 
-  const summaryText = `${monthLabel(month)} 순수입 ${formatKRW(report.netAmount)} · 실질 시급 ${wageText} (GigLedger)`;
+  const summaryText = `${monthLabel(month)} 순수입 ${formatKRW(report.netAmount)} · 실질 시급 ${wageText} (긱렛저)`;
 
   const handleCopy = async () => {
     try {
@@ -93,7 +93,7 @@ export default function Share() {
       ctx.fillText(`실질 시급 ${wageText}`, 96, 500);
       ctx.fillText(`${streak.current}일 연속 기록`, 96, 580);
       ctx.font = "400 44px sans-serif";
-      ctx.fillText("GigLedger", 96, CARD_HEIGHT - 96);
+      ctx.fillText("긱렛저", 96, CARD_HEIGHT - 96);
 
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
@@ -147,7 +147,7 @@ export default function Share() {
       <Button variant="fill" display="block" size="large" onClick={handleCopy}>
         요약 복사
       </Button>
-      <Spacing size={8} />
+      <Spacing size={12} />
       {/* TDS Button에는 loading prop이 없다 — 중복 탭은 disabled + 라벨 전환으로 막는다. */}
       <Button
         variant="weak"
@@ -158,7 +158,7 @@ export default function Share() {
       >
         {saving ? "이미지 만드는 중" : "이미지 저장"}
       </Button>
-      <Spacing size={8} />
+      <Spacing size={12} />
       <Button
         variant="weak"
         display="block"

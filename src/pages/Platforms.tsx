@@ -176,7 +176,7 @@ export default function Platforms() {
         <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
           {platforms.length} / {MAX_PLATFORMS}개 등록됨
         </Paragraph.Text>
-        <Button variant="weak" size="small" onClick={openAdd}>
+        <Button variant="weak" size="medium" onClick={openAdd}>
           플랫폼 추가
         </Button>
       </div>
