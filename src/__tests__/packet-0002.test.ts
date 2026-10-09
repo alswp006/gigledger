@@ -129,36 +129,36 @@ describe("src/lib/constants.ts — 상수 모듈 (STORAGE_KEYS / 한계값 / 색
       expect(typeof mod.ColorToken).toBeDefined();
     });
 
-    it("AC3-3: colorVar('blue') === 'var(--tds-color-blue500)' 를 반환한다", async () => {
+    it("AC3-3: colorVar('blue') === 'var(--adaptiveBlue500)' 를 반환한다", async () => {
       const mod = await import("@/lib/constants");
       expect(mod).toHaveProperty("colorVar");
       expect(typeof mod.colorVar).toBe("function");
-      expect(mod.colorVar("blue")).toBe("var(--tds-color-blue500)");
+      expect(mod.colorVar("blue")).toBe("var(--adaptiveBlue500)");
     });
 
-    it("AC3-4: colorVar('green') === 'var(--tds-color-green500)' 를 반환한다", async () => {
+    it("AC3-4: colorVar('green') === 'var(--adaptiveGreen500)' 를 반환한다", async () => {
       const mod = await import("@/lib/constants");
-      expect(mod.colorVar("green")).toBe("var(--tds-color-green500)");
+      expect(mod.colorVar("green")).toBe("var(--adaptiveGreen500)");
     });
 
-    it("AC3-5: colorVar('orange') === 'var(--tds-color-orange500)' 를 반환한다", async () => {
+    it("AC3-5: colorVar('orange') === 'var(--adaptiveOrange500)' 를 반환한다", async () => {
       const mod = await import("@/lib/constants");
-      expect(mod.colorVar("orange")).toBe("var(--tds-color-orange500)");
+      expect(mod.colorVar("orange")).toBe("var(--adaptiveOrange500)");
     });
 
-    it("AC3-6: colorVar('purple') === 'var(--tds-color-purple500)' 를 반환한다", async () => {
+    it("AC3-6: colorVar('purple') === 'var(--adaptivePurple500)' 를 반환한다", async () => {
       const mod = await import("@/lib/constants");
-      expect(mod.colorVar("purple")).toBe("var(--tds-color-purple500)");
+      expect(mod.colorVar("purple")).toBe("var(--adaptivePurple500)");
     });
 
-    it("AC3-7: colorVar('red') === 'var(--tds-color-red500)' 를 반환한다", async () => {
+    it("AC3-7: colorVar('red') === 'var(--adaptiveRed500)' 를 반환한다", async () => {
       const mod = await import("@/lib/constants");
-      expect(mod.colorVar("red")).toBe("var(--tds-color-red500)");
+      expect(mod.colorVar("red")).toBe("var(--adaptiveRed500)");
     });
 
-    it("AC3-8: colorVar('grey') === 'var(--tds-color-grey500)' 를 반환한다", async () => {
+    it("AC3-8: colorVar('grey') === 'var(--adaptiveGrey500)' 를 반환한다", async () => {
       const mod = await import("@/lib/constants");
-      expect(mod.colorVar("grey")).toBe("var(--tds-color-grey500)");
+      expect(mod.colorVar("grey")).toBe("var(--adaptiveGrey500)");
     });
   });
 
@@ -221,7 +221,7 @@ describe("src/lib/constants.ts — 상수 모듈 (STORAGE_KEYS / 한계값 / 색
       const colors = ["blue", "green", "orange", "purple", "red", "grey"];
       colors.forEach((color: any) => {
         const result = mod.colorVar(color);
-        expect(result).toMatch(/^var\(--tds-color-/);
+        expect(result).toMatch(/^var\(--adaptive/);
         expect(result).not.toMatch(/#/);
       });
 

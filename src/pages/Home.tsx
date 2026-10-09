@@ -179,7 +179,7 @@ export default function Home() {
                     style={{
                       height: 6,
                       borderRadius: 3,
-                      backgroundColor: "var(--tds-color-grey100)",
+                      backgroundColor: "var(--adaptiveGrey100)",
                       overflow: "hidden",
                     }}
                   >
@@ -188,7 +188,7 @@ export default function Home() {
                         width: `${Math.max(0, Math.min(100, goalRate))}%`,
                         height: "100%",
                         borderRadius: 3,
-                        backgroundColor: "var(--tds-color-blue500)",
+                        backgroundColor: "var(--adaptiveBlue500)",
                       }}
                     />
                   </div>

@@ -37,7 +37,7 @@ export function EmptyState({
       {description ? (
         <>
           <Spacing size={4} />
-          <Paragraph.Text typography="st13" color="secondary">
+          <Paragraph.Text typography="st13" color="var(--adaptiveGrey600)">
             {description}
           </Paragraph.Text>
         </>

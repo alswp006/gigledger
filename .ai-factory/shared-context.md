@@ -239,7 +239,7 @@ export const RouteState = {} as const;
 ### Exports (src/lib/)
 - calc.ts: export function calcHourlyWage( entries: Array<Pick<IncomeEntry, "amount" | "expense" | "minutes">> ): number | null; export function calcStreak( entries: Array<Pick<IncomeEntry, "date">>, referenceDate: string ): StreakResult; export function calcPeriodSummary( entries: Array<Pick<IncomeEntry, "amount" | "expense" | "minutes">> ): PeriodSummary; export function calcGoalRate(current: number, monthlyGoal: number): number | null; export function calcPlatformWages(entries: IncomeEntry[], platforms: Platform[]): WageRow[]; export function calcTrend14( entries: Array<Pick<IncomeEntry, "date" | "amount" | "expense">>, referenceDate: string ): ; export function calcMonthlyReport( entries: IncomeEntry[], platforms: Platform[], month: string ): MonthlyReport; export function sumAmountByDate(entries: Entry[], dateStr: string): number
 - constants.ts: export const STORAGE_KEYS =; export const MIN_WAGE_2026 = 10320; export const MAX_ENTRIES = 5000; export const MAX_PLATFORMS = 20; export const MAX_AMOUNT = 10000000; export const MAX_MINUTES = 1440; export const MAX_MEMO = 50; export const MAX_PLATFORM_NAME = 12
-- contract.ts: export type Entry =; export type Platform =; export type Settings =; export type RouteState =; export type LedgerState =; export type STORAGE_KEYS =; export type COLOR_TOKENS =; export type LIMITS =
+- contract.ts: export type Ledger =; export type Entry =; export type Platform =; export type RouteState =; export type ValidationError =; export type STORAGE_KEYS =; export type COLOR_PALETTE =; export type LIMITS =
 - date.ts: export function toDateKey(date: Date): string; export function toMonthKey(dateStr: string): string; export function startOfWeek(dateStr: string): string; export function addMonthKey(monthStr: string, delta: number): string; export function formatDate(date: string, fmt: "short" | "long" | "time" = "short"): string
 - format.ts: export function formatKRW(amount: number): string; export function formatMinutes(minutes: number): string; export function formatWage(amount: number | null): string; export function formatDelta(current: number, previous: number): string; export function formatAmount(amount: number, opts?:; export function parseKrwAmount(input: string): number | null
 - id.ts: export function genId(): string; export function generateId(): string
@@ -266,7 +266,7 @@ export const RouteState = {} as const;
 - SkeletonBlock.tsx: SkeletonBlock
 - Sparkline.tsx: Sparkline
 - StateView.tsx: EmptyGlyph, EmptyState, LoadingState
-- Subm...
+- S...
 CRITICAL: Before creating any new function, type, or component, check the list above. If something similar exists, import and use it.
 
 ## Already Implemented (do NOT duplicate or overwrite)
@@ -277,20 +277,22 @@ CRITICAL: Before creating any new function, type, or component, check the list a
 - 0005: localStorage 리포지토리 storage.ts (files: src/lib/storage.ts)
 - 0006: 계산 순수 함수 calc.ts (files: src/lib/calc.ts)
 - 0007: 상태 관리 훅 useLedger (files: src/hooks/useLedger.ts)
-- 0008: 시각화 공용 컴포넌트 (SummaryHero / Sparkline / MiniBar / ColorDot) (files: src/components/SummaryHero.tsx, src/components/Sparkline.tsx, src/components/MiniBar.tsx, src/components/ColorDot.tsx)
-- 0009: 레이아웃/상태 공용 컴포넌트 (SubmitFooter / EmptyState / SkeletonBlock) (files: src/components/SubmitFooter.tsx, src/components/EmptyState.tsx, src/components/SkeletonBlock.tsx)
-- 0010: /settings 설정 화면 (files: src/pages/Settings.tsx)
-- 0011: /platforms 플랫폼 관리 화면 (files: src/pages/Platforms.tsx)
-- 0012: /entry 수입 입력/수정 화면 (files: src/pages/Entry.tsx)
+- 0008: 시각화 공용 컴포넌트 (SummaryHero / Sparkline / MiniBar / ColorDot) (files: src/pages/HomeInput.tsx, src/pages/HomeData.tsx)
+- 0009: 레이아웃/상태 공용 컴포넌트 (SubmitFooter / EmptyState / SkeletonBlock) (files: src/components/MonthNav.tsx, src/components/SummaryHero.tsx, src/components/Sparkline.tsx, src/components/MiniBar.tsx, src/components/RecentRecordsCard.tsx, src/components/AddRecordCTA.tsx, src/components/AdSlotBanner.tsx)
+- 0010: /settings 설정 화면 (files: src/pages/RecordNew.tsx, src/pages/RecordEdit.tsx)
+- 0011: /platforms 플랫폼 관리 화면 (files: src/pages/Home.tsx, src/pages/__tests__/Home.test.tsx)
+- 0012: /entry 수입 입력/수정 화면 (files: src/pages/Result.tsx, src/components/PersonaHeroCard.tsx, src/components/AxisMiniBars.tsx, src/components/TipsCard.tsx)
+- 0013: / 홈 — 요약 섹션 (Tab/Hero/스트릭/목표/차트) (files: src/pages/Report.tsx, src/pages/ReportUnlockManager.tsx, src/pages/__tests__/Report.test.tsx, src/pages/__tests__/ReportUnlockManager.test.tsx)
 - 0014: / 홈 — 최근 기록 리스트 + 무한 스크롤 (files: src/components/RecentEntryList.tsx)
 - 0015: /wage 실질 시급 화면 (files: src/pages/Wage.tsx)
-- 0017: /report 본문 지표 컴포넌트 + 공유 이동 (files: src/components/ReportBody.tsx)
-- 0019: 라우팅 배선 + FloatingTabBar + 전역 Provider (files: src/App.tsx, src/components/FloatingTabBar.tsx)
-- 0013: / 홈 — 요약 섹션 (Tab/Hero/스트릭/목표/차트) (files: src/pages/Home.tsx)
 - 0016: /report 월 네비게이션 + 리워드 광고 게이트 (files: src/pages/Report.tsx)
-
-## TDD 상태
-⚠️ TDD 테스트 파일 자동 작성에 실패했습니다. 소스 코드를 작성하기 전에 `src/__tests__/packet-XXXX.test.ts` 파일에 AC 기반 테스트를 먼저 작성하세요 (TDD red phase). 테스트 작성 후 구현하세요.
+- 0017: /report 본문 지표 컴포넌트 + 공유 이동 (files: src/components/ReportBody.tsx)
+- 0018: /share 공유 카드 화면 (files: src/pages/Share.tsx)
+- 0019: 라우팅 배선 + FloatingTabBar + 전역 Provider (files: src/App.tsx, src/components/FloatingTabBar.tsx)
+- 0020: 광고 배치 훅 + 검수 정적 게이트 & UX 폴리시 (files: src/components/AdSection.tsx, src/hooks/useOnboardingNotice.ts, src/hooks/useAppToast.ts)
+- heal-1-01: 홈 요약 섹션 완성 + 렌더 루프/크래시 제거 (files: src/pages/Home.tsx)
+- heal-1-02: 리포트 월 네비게이션·광고 게이트 및 공유 카드 화면 완성 (files: src/pages/Report.tsx, src/pages/Share.tsx)
+- heal-1-03: 광고 배치 컴포넌트·공통 훅 완성 + 검수 정적 게이트 통과 (files: src/components/AdSection.tsx, src/hooks/useOnboardingNotice.ts, src/hooks/useAppToast.ts)
 
 ## Available exports from existing files
 // src/App.tsx
@@ -317,9 +319,6 @@ export function ColorDot({ colorToken }: { colorToken: ColorToken }) {
 
 // src/components/CountUp.tsx
 export function CountUp({
-
-// src/components/EmptyState.tsx
-export function EmptyState({
 
 // src/components/FloatingTabBar.tsx
 export type TabItem = {
@@ -361,15 +360,18 @@ export function SummaryHero({
 
 // src/components/TossPurchase.tsx
 export interface TossPurchaseResult {
-export function Tos
+export function TossPurchase({
+
+// src/components/TossRewardAd.tsx
+export function
 
 ## Memory Index (자동 학습 — 힌트로만 사용, 실제 코드 확인 필수)
 
-Available topics: deploy(1), general(9), testing(1)
+Available topics: deploy(4), general(14), testing(2), ui(3)
 
 Key lessons (verify against actual code before applying):
-- [general] 외부에서 들어온 모든 값(라우터 state, 로컬 저장소, 부분 입력 폼)은 사용 직전에 배열·객체 기본값으로 정규화하고, 테이블/맵 조회 결과는 존재 확인 후에만 하위 속성이나 length에 접근하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 의존 그래프 최하층의 타입·계약 파일은 런타임 코드 0줄의 순수 선언으로 가장 먼저 단독 타입체크를 통과시키고, 파일 생성은 셸 명령이 아닌 허용된 편집 도구로만 하게 강제하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 영속 저장소에서 읽은 값은 항상 스키마 기본값으로 정규화해 배열·객체 타입을 보장한 뒤 반환하고, 화면은 빈/손상/부분 데이터에서도 렌더되도록 방어하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 정책·기능 제거형 리팩터링은 화면과 도메인 로직 레이어에서만 수행하고, package.json의 플랫폼 필수 의존성(디자인 시스템·플랫폼 SDK·프레임워크 코어)은 어떤 경우에도 삭제하지 말 것 — 필수 패키지 화이트리스트를 빌드 전 가드로 검증하라. (60% · 타 앱 1회 — 맹신 금지)
-- [general] 공용 기반 모듈(상수·저장소·계산 유틸)이 실제로 머지되기 전에는 이를 import하는 화면·훅 패킷을 머지하지 말고, 모든 머지 게이트에 타입체크와 프로덕션 빌드 통과(미해결 import 0건)를 필수로 걸어라. (60% · 타 앱 1회 — 맹신 금지)
+- [general] 진입점 라우터 배선은 맨 끝에 두지 말고 기반 패킷 직후 플레이스홀더 페이지와 함께 먼저 병합하라. 화면 패킷은 그 플레이스홀더를 교체하게 해서, 언제 중단돼도 병합된 화면에 도달할 수 있게 하라. (60% · 타 앱 1회 — 맹신 금지)
+- [general] 파일 생성 전 디렉토리 구조 확인 — mkdir -p로 경로 보장 (60% · 타 앱 1회 — 맹신 금지)
+- [general] 화면·라우팅 등 소비자 모듈은 그것이 import하는 생산자 모듈이 병합된 뒤에만 병합하고, 순서를 지킬 수 없으면 소비자 병합과 동시에 최소 플레이스홀더를 만들어 매 병합 직후 타입체크와 빌드가 항상 통과하도록 유지하라. (60% · 타 앱 1회 — 맹신 금지)
+- [general] 전역 라우팅·탭바·Provider 배선은 개별 화면보다 먼저(초반 20% 안에) 완료하고 미구현 화면은 스텁 라우트로 연결해, 시간 예산이 소진돼도 앱이 항상 실행 가능한 상태를 유지하라. (60% · 타 앱 1회 — 맹신 금지)
+- [general] 저장·데이터 접근 등 기반 계층 패킷은 이를 import 하는 화면 패킷보다 반드시 먼저 완료·병합하고, 미완료면 상위 화면 패킷 병합을 차단하라 — 빈 기반 모듈 하나가 전 라우트 스모크를 무너뜨린다. (60% · 타 앱 1회 — 맹신 금지)

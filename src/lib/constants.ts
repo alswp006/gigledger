@@ -26,12 +26,12 @@ export type ColorToken = ColorTokenType;
 export const ColorToken = {} as const;
 
 const COLOR_VAR_MAP: Record<ColorTokenType, string> = {
-  blue: "var(--tds-color-blue500)",
-  green: "var(--tds-color-green500)",
-  orange: "var(--tds-color-orange500)",
-  purple: "var(--tds-color-purple500)",
-  red: "var(--tds-color-red500)",
-  grey: "var(--tds-color-grey500)",
+  blue: "var(--adaptiveBlue500)",
+  green: "var(--adaptiveGreen500)",
+  orange: "var(--adaptiveOrange500)",
+  purple: "var(--adaptivePurple500)",
+  red: "var(--adaptiveRed500)",
+  grey: "var(--adaptiveGrey500)",
 };
 
 export function colorVar(token: ColorTokenType): string {

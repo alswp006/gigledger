@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Chip, ListRow, Paragraph, Spacing, Tab, Top } from "@toss/tds-mobile";
+import { Button, Chip, ChipItem, ListRow, Paragraph, Spacing, Tab, Top } from "@toss/tds-mobile";
 import { generateHapticFeedback } from "@apps-in-toss/web-framework";
 import { ScreenScaffold } from "@/components/ScreenScaffold";
 import { FloatingTabBar } from "@/components/FloatingTabBar";
@@ -153,8 +153,8 @@ export default function Wage() {
                     >
                       <Paragraph.Text typography="t6">{formatWage(row.hourlyWage)}</Paragraph.Text>
                       {isLowWage ? (
-                        <Chip variant="weak" size="small">
-                          최저임금 미만
+                        <Chip kind="action" variant="weak" size="small">
+                          <ChipItem>최저임금 미만</ChipItem>
                         </Chip>
                       ) : null}
                     </div>

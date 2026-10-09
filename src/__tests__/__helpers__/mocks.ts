@@ -180,10 +180,14 @@ export function mockTds() {
       { Header: ({ children }: any) => React.createElement("div", null, children) },
     ),
 
-    Chip: ({ children, selected, variant, onClick }: any) =>
+    // 실제 TDS: Chip=그룹 컨테이너(kind/variant/size/wrap), 칩 하나=ChipItem(selected/disabled/onClick).
+    Chip: ({ children, kind, variant }: any) =>
+      React.createElement("div", { "data-kind": kind, "data-variant": variant }, children),
+
+    ChipItem: ({ children, selected, disabled, onClick }: any) =>
       React.createElement(
         "button",
-        { role: "button", "aria-pressed": selected, "data-variant": variant, onClick },
+        { role: "button", "aria-pressed": selected, disabled, onClick },
         children,
       ),
 

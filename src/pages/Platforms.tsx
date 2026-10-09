@@ -206,9 +206,6 @@ export default function Platforms() {
             </span>
           );
           return (
-            // left/contents/right는 실제 TDS ListRow가 그리는 레이아웃 슬롯이고, children은
-            // jsdom 테스트 목(ListRow가 slot prop 대신 children만 렌더)을 위한 것이다 —
-            // 실제 컴포넌트는 children을 쓰지 않으므로 화면엔 슬롯 버전만 보인다(중복 렌더 아님).
             <ListRow
               key={p.id}
               onClick={() => openEdit(p)}
@@ -221,16 +218,7 @@ export default function Platforms() {
                 />
               }
               right={switchArea}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", minHeight: 56 }}>
-                <ColorDot colorToken={p.colorToken} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {nameArea}
-                  <Paragraph.Text typography="t7">{`${CATEGORY_LABELS[p.category]} 카테고리`}</Paragraph.Text>
-                </div>
-                {switchArea}
-              </div>
-            </ListRow>
+            ></ListRow>
           );
         })
       )}
